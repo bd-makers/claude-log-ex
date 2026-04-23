@@ -1,0 +1,23 @@
+{
+  "name": "claude-log-ex",
+  "version": "0.1.0",
+  "bin": {
+    "cle": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "bun src/cli.tsx",
+    "build": "bun build src/cli.tsx --outdir dist --target node",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "ink": "^5.0.1",
+    "react": "^18.2.0",
+    "chokidar": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}
