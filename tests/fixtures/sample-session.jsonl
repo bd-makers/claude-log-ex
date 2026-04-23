@@ -1,0 +1,6 @@
+{"type":"queue-operation","operation":"enqueue","timestamp":"2026-04-23T05:12:12.056Z","sessionId":"test-session-123","content":"테스트 메시지"}
+{"parentUuid":null,"isSidechain":false,"attachment":{"type":"hook_success","hookName":"SessionStart:startup","hookEvent":"SessionStart","content":"","stdout":"{}","stderr":"","exitCode":0,"command":"startup.sh","durationMs":42},"timestamp":"2026-04-23T05:12:12.100Z"}
+{"parentUuid":"abc","isSidechain":false,"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu_001","name":"Skill","input":{"skill":"superpowers:writing-plans"}}]},"timestamp":"2026-04-23T05:12:13.000Z"}
+{"parentUuid":"abc","isSidechain":false,"attachment":{"type":"skill_listing","content":"- update-config: Configure settings\n- find-skills: Find available skills","skillCount":2,"isInitial":true},"timestamp":"2026-04-23T05:12:14.000Z"}
+{"parentUuid":"abc","isSidechain":false,"attachment":{"type":"mcp_instructions_delta","addedNames":["gemini","figma"],"removedNames":[]},"timestamp":"2026-04-23T05:12:15.000Z"}
+{"parentUuid":"def","isSidechain":false,"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"tu_002","name":"Agent","input":{"subagent_type":"Explore","description":"Explore codebase","prompt":"Find all TypeScript files"}}]},"timestamp":"2026-04-23T05:12:16.000Z"}
