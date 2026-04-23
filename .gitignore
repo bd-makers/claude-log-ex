@@ -1,3 +1,40 @@
 node_modules/
 dist/
 *.log
+
+# harness-aijient-team
+.claude/settings.local.json
+.harness/active.json
+
+# AI
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+
+oh-my-openagent.json
+opencode.json
+
+handoff.md
+plan.md
+
+.claude
+.claude/
+.cursor
+.cursor/
+.omc
+.omc/
+.omx
+.omx/
+.ai
+.ai/
+.sisyphus
+.sisyphus/
+.agents
+.agents/
+.cursorrules
+.harness
+
+# build
+output/
+
+docs/
