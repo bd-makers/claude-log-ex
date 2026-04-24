@@ -1,15 +1,23 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
 
-type Props = { events: LogEvent[] };
+type Props = {
+  events: LogEvent[];
+  scrollOffset: number;
+  visibleHeight: number;
+};
 
-export function SkillsPanel({ events }: Props) {
+export function SkillsPanel({ events, scrollOffset, visibleHeight }: Props) {
   const skillEvents = events.filter((e) => e.category === "skill");
   const invocations = skillEvents.filter(
     (e) => (e.detail as { phase: string }).phase === "invoked",
   );
   const listings = skillEvents.filter(
     (e) => (e.detail as { phase: string }).phase === "listed",
+  );
+  const visibleInvocations = invocations.slice(
+    scrollOffset,
+    scrollOffset + visibleHeight - 3,
   );
 
   return (
@@ -27,7 +35,7 @@ export function SkillsPanel({ events }: Props) {
         </Box>
       )}
       <Text bold>호출된 스킬 ({invocations.length})</Text>
-      {invocations.map((e) => {
+      {visibleInvocations.map((e) => {
         const d = e.detail as { skillName: string };
         return (
           <Box key={e.id} gap={1}>

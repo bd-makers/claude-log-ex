@@ -2,7 +2,7 @@
   "name": "claude-log-ex",
   "version": "0.1.0",
   "bin": {
-    "cle": "./dist/cli.js"
+    "clx": "./dist/cli.js"
   },
   "scripts": {
     "dev": "bun src/cli.tsx",

@@ -1,16 +1,24 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
 
-type Props = { events: LogEvent[] };
+type Props = {
+  events: LogEvent[];
+  scrollOffset: number;
+  visibleHeight: number;
+};
 
-export function HooksPanel({ events }: Props) {
+export function HooksPanel({ events, scrollOffset, visibleHeight }: Props) {
   const hookEvents = events.filter((e) => e.category === "hook");
+  const visible = hookEvents.slice(
+    scrollOffset,
+    scrollOffset + visibleHeight - 1,
+  );
   return (
     <Box flexDirection="column">
       <Text bold underline>
         Hooks ({hookEvents.length})
       </Text>
-      {hookEvents.slice(-20).map((e) => {
+      {visible.map((e) => {
         const d = e.detail as {
           hookName: string;
           hookEvent: string;

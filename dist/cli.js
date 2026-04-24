@@ -45086,6 +45086,8 @@ var useApp = () => import_react17.useContext(AppContext_default);
 var use_app_default = useApp;
 // node_modules/ink/build/hooks/use-stdout.js
 var import_react18 = __toESM(require_react(), 1);
+var useStdout = () => import_react18.useContext(StdoutContext_default);
+var use_stdout_default = useStdout;
 // node_modules/ink/build/hooks/use-stderr.js
 var import_react19 = __toESM(require_react(), 1);
 // node_modules/ink/build/hooks/use-focus.js
@@ -46076,10 +46078,11 @@ function tailJsonlFile(filePath, onLine) {
 
 // src/ui/panels/SkillsPanel.tsx
 var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
-function SkillsPanel({ events }) {
+function SkillsPanel({ events, scrollOffset, visibleHeight }) {
   const skillEvents = events.filter((e) => e.category === "skill");
   const invocations = skillEvents.filter((e) => e.detail.phase === "invoked");
   const listings = skillEvents.filter((e) => e.detail.phase === "listed");
+  const visibleInvocations = invocations.slice(scrollOffset, scrollOffset + visibleHeight - 3);
   return /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(Box_default, {
     flexDirection: "column",
     gap: 1,
@@ -46109,7 +46112,7 @@ function SkillsPanel({ events }) {
           ")"
         ]
       }, undefined, true, undefined, this),
-      invocations.map((e) => {
+      visibleInvocations.map((e) => {
         const d = e.detail;
         return /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(Box_default, {
           gap: 1,
@@ -46139,8 +46142,9 @@ function SkillsPanel({ events }) {
 
 // src/ui/panels/HooksPanel.tsx
 var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
-function HooksPanel({ events }) {
+function HooksPanel({ events, scrollOffset, visibleHeight }) {
   const hookEvents = events.filter((e) => e.category === "hook");
+  const visible = hookEvents.slice(scrollOffset, scrollOffset + visibleHeight - 1);
   return /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(Box_default, {
     flexDirection: "column",
     children: [
@@ -46153,7 +46157,7 @@ function HooksPanel({ events }) {
           ")"
         ]
       }, undefined, true, undefined, this),
-      hookEvents.slice(-20).map((e) => {
+      visible.map((e) => {
         const d = e.detail;
         return /* @__PURE__ */ jsx_dev_runtime4.jsxDEV(Box_default, {
           gap: 1,
@@ -46201,8 +46205,10 @@ function HooksPanel({ events }) {
 
 // src/ui/panels/AgentsPanel.tsx
 var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
-function AgentsPanel({ events }) {
+function AgentsPanel({ events, scrollOffset, visibleHeight }) {
   const agentEvents = events.filter((e) => e.category === "agent");
+  const itemHeight = 2;
+  const visible = agentEvents.slice(scrollOffset, scrollOffset + Math.floor(visibleHeight / itemHeight));
   return /* @__PURE__ */ jsx_dev_runtime5.jsxDEV(Box_default, {
     flexDirection: "column",
     children: [
@@ -46215,7 +46221,7 @@ function AgentsPanel({ events }) {
           ")"
         ]
       }, undefined, true, undefined, this),
-      agentEvents.map((e) => {
+      visible.map((e) => {
         const d = e.detail;
         return /* @__PURE__ */ jsx_dev_runtime5.jsxDEV(Box_default, {
           flexDirection: "column",
@@ -46268,7 +46274,7 @@ function bar(ratio, width = 20) {
   const filled = Math.round(ratio * width);
   return "█".repeat(filled) + "░".repeat(width - filled);
 }
-function TokensPanel({ events }) {
+function TokensPanel({ events, scrollOffset, visibleHeight }) {
   const tokenEvents = events.filter((e) => e.category === "token");
   if (tokenEvents.length === 0) {
     return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
@@ -46356,7 +46362,7 @@ function TokensPanel({ events }) {
         bold: true,
         children: "턴별 내역"
       }, undefined, false, undefined, this),
-      tokenEvents.slice(-15).map((e) => {
+      tokenEvents.slice(scrollOffset, scrollOffset + Math.max(5, visibleHeight - 8)).map((e) => {
         const d = e.detail;
         const ratio = d.totalInputTokens > 0 ? d.fixedTokens / d.totalInputTokens : 0;
         return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Box_default, {
@@ -46405,8 +46411,11 @@ function TokensPanel({ events }) {
 
 // src/ui/panels/RulesPanel.tsx
 var jsx_dev_runtime7 = __toESM(require_jsx_dev_runtime(), 1);
-function RulesPanel({ events }) {
+function RulesPanel({ events, scrollOffset, visibleHeight }) {
   const ruleEvents = events.filter((e) => e.category === "rule");
+  const itemHeight = 3;
+  const maxVisible = Math.floor(visibleHeight / itemHeight);
+  const visible = ruleEvents.slice(scrollOffset, scrollOffset + maxVisible);
   return /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(Box_default, {
     flexDirection: "column",
     gap: 1,
@@ -46418,14 +46427,15 @@ function RulesPanel({ events }) {
         children: [
           "Rules / Context (",
           ruleEvents.length,
-          ")"
+          ")",
+          ruleEvents.length > maxVisible ? ` [↑↓ 스크롤: ${scrollOffset + 1}-${Math.min(scrollOffset + maxVisible, ruleEvents.length)}/${ruleEvents.length}]` : ""
         ]
       }, undefined, true, undefined, this),
       ruleEvents.length === 0 && /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(Text, {
         dimColor: true,
         children: "hook_additional_context 이벤트 없음"
       }, undefined, false, undefined, this),
-      ruleEvents.slice(-20).map((e) => {
+      visible.map((e) => {
         const d = e.detail;
         return /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(Box_default, {
           flexDirection: "column",
@@ -46470,7 +46480,11 @@ function RulesPanel({ events }) {
 
 // src/ui/panels/PluginsPanel.tsx
 var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
-function PluginsPanel({ events }) {
+function PluginsPanel({
+  events,
+  scrollOffset: _scrollOffset,
+  visibleHeight: _visibleHeight
+}) {
   const pluginEvents = events.filter((e) => e.category === "plugin");
   const mcpEvents = pluginEvents.filter((e) => e.detail.pluginType === "mcp");
   const toolEvents = pluginEvents.filter((e) => e.detail.pluginType === "tool");
@@ -46589,6 +46603,9 @@ var TABS = [
 function App2({ sessionPath }) {
   const [events, setEvents] = import_react22.useState([]);
   const [activeTab, setActiveTab] = import_react22.useState("timeline");
+  const [scrollOffset, setScrollOffset] = import_react22.useState(0);
+  const { stdout } = use_stdout_default();
+  const terminalRows = stdout?.rows ?? 24;
   import_react22.useEffect(() => {
     let idCounter = 0;
     const stop = tailJsonlFile(sessionPath, (line) => {
@@ -46605,20 +46622,51 @@ function App2({ sessionPath }) {
     return stop;
   }, [sessionPath]);
   const { exit } = use_app_default();
+  import_react22.useEffect(() => {
+    if (!process.stdout.isTTY || !process.stdin.isTTY)
+      return;
+    process.stdout.write("\x1B[?1000h");
+    process.stdout.write("\x1B[?1006h");
+    const handleData = (data) => {
+      const str = data.toString("utf8");
+      const m = str.match(/\x1b\[<(\d+);\d+;\d+M/);
+      if (!m)
+        return;
+      const btn = parseInt(m[1]);
+      if (btn === 64)
+        setScrollOffset((o) => Math.max(0, o - 3));
+      if (btn === 65)
+        setScrollOffset((o) => o + 3);
+    };
+    process.stdin.on("data", handleData);
+    return () => {
+      process.stdout.write("\x1B[?1006l");
+      process.stdout.write("\x1B[?1000l");
+      process.stdin.off("data", handleData);
+    };
+  }, []);
   use_input_default((input, key) => {
     if (input === "q")
       exit();
     const idx = parseInt(input) - 1;
-    if (idx >= 0 && idx < TABS.length)
+    if (idx >= 0 && idx < TABS.length) {
       setActiveTab(TABS[idx]);
+      setScrollOffset(0);
+    }
     if (key.leftArrow) {
       const i = TABS.indexOf(activeTab);
       setActiveTab(TABS[Math.max(0, i - 1)]);
+      setScrollOffset(0);
     }
     if (key.rightArrow) {
       const i = TABS.indexOf(activeTab);
       setActiveTab(TABS[Math.min(TABS.length - 1, i + 1)]);
+      setScrollOffset(0);
     }
+    if (key.upArrow)
+      setScrollOffset((o) => Math.max(0, o - 1));
+    if (key.downArrow)
+      setScrollOffset((o) => o + 1);
   });
   const totalTokens = import_react22.useMemo(() => events.filter((e) => e.category === "token").reduce((acc, e) => {
     const d = e.detail;
@@ -46628,9 +46676,10 @@ function App2({ sessionPath }) {
     };
   }, { fixed: 0, nonFixed: 0 }), [events]);
   const filtered = activeTab === "timeline" ? events : events.filter((e) => e.category === activeTab.replace("s", "") || e.category === activeTab.slice(0, -1));
+  const contentHeight = terminalRows - 4;
   return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
     flexDirection: "column",
-    height: "100%",
+    height: terminalRows,
     children: [
       /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Header, {
         sessionPath,
@@ -46643,30 +46692,42 @@ function App2({ sessionPath }) {
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
         flexDirection: "column",
-        flexGrow: 1,
-        overflowY: "hidden",
+        height: contentHeight,
+        overflow: "hidden",
         children: [
           activeTab === "skills" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(SkillsPanel, {
-            events
+            events,
+            scrollOffset,
+            visibleHeight: contentHeight
           }, undefined, false, undefined, this),
           activeTab === "hooks" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(HooksPanel, {
-            events
+            events,
+            scrollOffset,
+            visibleHeight: contentHeight
           }, undefined, false, undefined, this),
           activeTab === "agents" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(AgentsPanel, {
-            events
+            events,
+            scrollOffset,
+            visibleHeight: contentHeight
           }, undefined, false, undefined, this),
           activeTab === "tokens" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(TokensPanel, {
-            events
+            events,
+            scrollOffset,
+            visibleHeight: contentHeight
           }, undefined, false, undefined, this),
           activeTab === "rules" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(RulesPanel, {
-            events
+            events,
+            scrollOffset,
+            visibleHeight: contentHeight
           }, undefined, false, undefined, this),
           activeTab === "plugins" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(PluginsPanel, {
-            events
+            events,
+            scrollOffset,
+            visibleHeight: contentHeight
           }, undefined, false, undefined, this),
           activeTab === "timeline" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
             children: [
-              filtered.slice(-30).map((event) => /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+              filtered.slice(-contentHeight).slice(scrollOffset > 0 ? scrollOffset : 0).map((event) => /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
                 gap: 1,
                 children: [
                   /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
@@ -46700,7 +46761,7 @@ function App2({ sessionPath }) {
         paddingX: 1,
         children: /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
           dimColor: true,
-          children: "1-7: 탭 전환 | ←→: 이동 | q: 종료"
+          children: "1-7: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료"
         }, undefined, false, undefined, this)
       }, undefined, false, undefined, this)
     ]

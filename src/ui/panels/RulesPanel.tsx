@@ -1,19 +1,29 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
 
-type Props = { events: LogEvent[] };
+type Props = {
+  events: LogEvent[];
+  scrollOffset: number;
+  visibleHeight: number;
+};
 
-export function RulesPanel({ events }: Props) {
+export function RulesPanel({ events, scrollOffset, visibleHeight }: Props) {
   const ruleEvents = events.filter((e) => e.category === "rule");
+  const itemHeight = 3;
+  const maxVisible = Math.floor(visibleHeight / itemHeight);
+  const visible = ruleEvents.slice(scrollOffset, scrollOffset + maxVisible);
   return (
     <Box flexDirection="column" gap={1} width="100%">
       <Text bold underline>
         Rules / Context ({ruleEvents.length})
+        {ruleEvents.length > maxVisible
+          ? ` [↑↓ 스크롤: ${scrollOffset + 1}-${Math.min(scrollOffset + maxVisible, ruleEvents.length)}/${ruleEvents.length}]`
+          : ""}
       </Text>
       {ruleEvents.length === 0 && (
         <Text dimColor>hook_additional_context 이벤트 없음</Text>
       )}
-      {ruleEvents.slice(-20).map((e) => {
+      {visible.map((e) => {
         const d = e.detail as { source: string; content: string };
         return (
           <Box key={e.id} flexDirection="column" marginBottom={1} width="100%">

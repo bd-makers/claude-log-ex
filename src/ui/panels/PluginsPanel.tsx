@@ -1,9 +1,17 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
 
-type Props = { events: LogEvent[] };
+type Props = {
+  events: LogEvent[];
+  scrollOffset: number;
+  visibleHeight: number;
+};
 
-export function PluginsPanel({ events }: Props) {
+export function PluginsPanel({
+  events,
+  scrollOffset: _scrollOffset,
+  visibleHeight: _visibleHeight,
+}: Props) {
   const pluginEvents = events.filter((e) => e.category === "plugin");
   const mcpEvents = pluginEvents.filter(
     (e) => (e.detail as { pluginType: string }).pluginType === "mcp",

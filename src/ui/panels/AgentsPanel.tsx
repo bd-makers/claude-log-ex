@@ -1,16 +1,25 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
 
-type Props = { events: LogEvent[] };
+type Props = {
+  events: LogEvent[];
+  scrollOffset: number;
+  visibleHeight: number;
+};
 
-export function AgentsPanel({ events }: Props) {
+export function AgentsPanel({ events, scrollOffset, visibleHeight }: Props) {
   const agentEvents = events.filter((e) => e.category === "agent");
+  const itemHeight = 2;
+  const visible = agentEvents.slice(
+    scrollOffset,
+    scrollOffset + Math.floor(visibleHeight / itemHeight),
+  );
   return (
     <Box flexDirection="column">
       <Text bold underline>
         Agents ({agentEvents.length})
       </Text>
-      {agentEvents.map((e) => {
+      {visible.map((e) => {
         const d = e.detail as {
           subagentType?: string;
           prompt?: string;
