@@ -10,6 +10,8 @@ import { SkillsPanel } from "./panels/SkillsPanel";
 import { HooksPanel } from "./panels/HooksPanel";
 import { AgentsPanel } from "./panels/AgentsPanel";
 import { TokensPanel } from "./panels/TokensPanel";
+import { RulesPanel } from "./panels/RulesPanel";
+import { PluginsPanel } from "./panels/PluginsPanel";
 
 type Tab =
   | "timeline"
@@ -103,9 +105,9 @@ export function App({ sessionPath }: Props) {
         {activeTab === "hooks" && <HooksPanel events={events} />}
         {activeTab === "agents" && <AgentsPanel events={events} />}
         {activeTab === "tokens" && <TokensPanel events={events} />}
-        {(activeTab === "timeline" ||
-          activeTab === "rules" ||
-          activeTab === "plugins") && (
+        {activeTab === "rules" && <RulesPanel events={events} />}
+        {activeTab === "plugins" && <PluginsPanel events={events} />}
+        {activeTab === "timeline" && (
           <>
             {filtered.slice(-30).map((event) => (
               <Box key={event.id} gap={1}>
