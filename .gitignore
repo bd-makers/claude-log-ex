@@ -25,5 +25,8 @@ plan.md
 .sisyphus
 docs
 
+clonse.sh
+delete.sh
+
 # build
 output/
