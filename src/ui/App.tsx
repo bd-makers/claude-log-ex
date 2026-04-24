@@ -6,6 +6,9 @@ import { classifyEvent } from "../core/event-classifier";
 import { parseJsonlLine } from "../core/jsonl-parser";
 import { tailJsonlFile } from "../core/file-watcher";
 import type { LogEvent } from "../events/types";
+import { SkillsPanel } from "./panels/SkillsPanel";
+import { HooksPanel } from "./panels/HooksPanel";
+import { AgentsPanel } from "./panels/AgentsPanel";
 
 type Tab = "timeline" | "skills" | "hooks" | "rules" | "plugins" | "agents";
 const TABS: Tab[] = [
@@ -61,19 +64,26 @@ export function App({ sessionPath }: Props) {
       <Header sessionPath={sessionPath} eventCount={events.length} />
       <TabBar tabs={TABS} active={activeTab} />
       <Box flexDirection="column" flexGrow={1} overflowY="hidden">
-        {filtered.slice(-30).map((event) => (
-          <Box key={event.id} gap={1}>
-            <Text color="gray" dimColor>
-              {event.timestamp.toISOString().slice(11, 19)}
-            </Text>
-            <Text color={categoryColor(event.category)}>
-              [{event.category.toUpperCase()}]
-            </Text>
-            <Text>{event.summary}</Text>
-          </Box>
-        ))}
-        {filtered.length === 0 && (
-          <Text dimColor>이벤트 없음. 이 탭의 이벤트 대기 중...</Text>
+        {activeTab === "skills" && <SkillsPanel events={events} />}
+        {activeTab === "hooks" && <HooksPanel events={events} />}
+        {activeTab === "agents" && <AgentsPanel events={events} />}
+        {(activeTab === "timeline" ||
+          activeTab === "rules" ||
+          activeTab === "plugins") && (
+          <>
+            {filtered.slice(-30).map((event) => (
+              <Box key={event.id} gap={1}>
+                <Text color="gray" dimColor>
+                  {event.timestamp.toISOString().slice(11, 19)}
+                </Text>
+                <Text color={categoryColor(event.category)}>
+                  [{event.category.toUpperCase()}]
+                </Text>
+                <Text>{event.summary}</Text>
+              </Box>
+            ))}
+            {filtered.length === 0 && <Text dimColor>이벤트 없음...</Text>}
+          </>
         )}
       </Box>
       <Box borderStyle="single" paddingX={1}>
