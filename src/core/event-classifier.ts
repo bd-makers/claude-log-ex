@@ -89,6 +89,27 @@ export function classifyEvent(
     }
   }
 
+  if (raw.type === "human" && raw.message?.content) {
+    const content = raw.message.content;
+    let text = "";
+    if (typeof content === "string") {
+      text = content;
+    } else if (Array.isArray(content)) {
+      const textItem = (content as RawContent[]).find((c) => c.type === "text");
+      if (textItem && textItem.type === "text") text = textItem.text;
+    }
+    if (!text.trim()) return null;
+    const firstLine = text.split("\n")[0].slice(0, 100);
+    const hasMore = text.includes("\n") || text.length > 100;
+    return {
+      id,
+      timestamp,
+      category: "message",
+      summary: hasMore ? firstLine + "…" : firstLine,
+      detail: { role: "user", text },
+    };
+  }
+
   if (raw.type === "assistant" && raw.message?.content) {
     const content = raw.message.content;
     if (!Array.isArray(content)) return null;

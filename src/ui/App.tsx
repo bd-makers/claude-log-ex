@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Box, Text, useInput } from "ink";
+import { Box, Text, useInput, useApp } from "ink";
 import { Header } from "./Header";
 import { TabBar } from "./TabBar";
 import { classifyEvent, classifyUsage } from "../core/event-classifier";
@@ -50,7 +50,10 @@ export function App({ sessionPath }: Props) {
     return stop;
   }, [sessionPath]);
 
+  const { exit } = useApp();
+
   useInput((input, key) => {
+    if (input === "q") exit();
     const idx = parseInt(input) - 1;
     if (idx >= 0 && idx < TABS.length) setActiveTab(TABS[idx]);
     if (key.leftArrow) {

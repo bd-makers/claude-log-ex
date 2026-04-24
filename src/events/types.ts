@@ -120,3 +120,11 @@ export type AgentEvent = LogEvent & {
     parentUuid?: string | null;
   };
 };
+
+export type MessageEvent = LogEvent & {
+  category: "message";
+  detail: {
+    role: "user" | "assistant";
+    text: string;
+  };
+};
