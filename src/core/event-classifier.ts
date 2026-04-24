@@ -131,3 +131,30 @@ export function classifyEvent(
 
   return null;
 }
+
+export function classifyUsage(
+  raw: Partial<RawJsonlLine>,
+  id: string,
+): LogEvent | null {
+  if (raw.type !== "assistant" || !raw.message?.usage) return null;
+  const u = raw.message.usage;
+  const cacheRead = u.cache_read_input_tokens ?? 0;
+  const cacheCreate = u.cache_creation_input_tokens ?? 0;
+  const inputTokens = u.input_tokens ?? 0;
+  const outputTokens = u.output_tokens ?? 0;
+  if (cacheRead + cacheCreate + inputTokens + outputTokens === 0) return null;
+  const timestamp = raw.timestamp ? new Date(raw.timestamp) : new Date();
+  return {
+    id,
+    timestamp,
+    category: "token",
+    summary: `고정 ${cacheRead.toLocaleString()} / 비고정 ${(inputTokens + cacheCreate).toLocaleString()} / 출력 ${outputTokens.toLocaleString()}`,
+    detail: {
+      fixedTokens: cacheRead,
+      nonFixedTokens: inputTokens + cacheCreate,
+      outputTokens,
+      cacheCreationTokens: cacheCreate,
+      totalInputTokens: cacheRead + cacheCreate + inputTokens,
+    },
+  };
+}

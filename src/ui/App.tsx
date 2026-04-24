@@ -1,16 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Text, useInput } from "ink";
 import { Header } from "./Header";
 import { TabBar } from "./TabBar";
-import { classifyEvent } from "../core/event-classifier";
+import { classifyEvent, classifyUsage } from "../core/event-classifier";
 import { parseJsonlLine } from "../core/jsonl-parser";
 import { tailJsonlFile } from "../core/file-watcher";
 import type { LogEvent } from "../events/types";
 import { SkillsPanel } from "./panels/SkillsPanel";
 import { HooksPanel } from "./panels/HooksPanel";
 import { AgentsPanel } from "./panels/AgentsPanel";
+import { TokensPanel } from "./panels/TokensPanel";
 
-type Tab = "timeline" | "skills" | "hooks" | "rules" | "plugins" | "agents";
+type Tab =
+  | "timeline"
+  | "skills"
+  | "hooks"
+  | "rules"
+  | "plugins"
+  | "agents"
+  | "tokens";
 const TABS: Tab[] = [
   "timeline",
   "skills",
@@ -18,6 +26,7 @@ const TABS: Tab[] = [
   "rules",
   "plugins",
   "agents",
+  "tokens",
 ];
 
 type Props = { sessionPath: string };
@@ -33,6 +42,8 @@ export function App({ sessionPath }: Props) {
       if (!raw) return;
       const event = classifyEvent(raw, String(idCounter++));
       if (event) setEvents((prev) => [...prev, event]);
+      const tokenEvent = classifyUsage(raw, String(idCounter++));
+      if (tokenEvent) setEvents((prev) => [...prev, tokenEvent]);
     });
     return stop;
   }, [sessionPath]);
@@ -50,6 +61,26 @@ export function App({ sessionPath }: Props) {
     }
   });
 
+  const totalTokens = useMemo(
+    () =>
+      events
+        .filter((e) => e.category === "token")
+        .reduce(
+          (acc, e) => {
+            const d = e.detail as {
+              fixedTokens: number;
+              nonFixedTokens: number;
+            };
+            return {
+              fixed: acc.fixed + d.fixedTokens,
+              nonFixed: acc.nonFixed + d.nonFixedTokens,
+            };
+          },
+          { fixed: 0, nonFixed: 0 },
+        ),
+    [events],
+  );
+
   const filtered =
     activeTab === "timeline"
       ? events
@@ -61,12 +92,17 @@ export function App({ sessionPath }: Props) {
 
   return (
     <Box flexDirection="column" height="100%">
-      <Header sessionPath={sessionPath} eventCount={events.length} />
+      <Header
+        sessionPath={sessionPath}
+        eventCount={events.length}
+        totalTokens={totalTokens}
+      />
       <TabBar tabs={TABS} active={activeTab} />
       <Box flexDirection="column" flexGrow={1} overflowY="hidden">
         {activeTab === "skills" && <SkillsPanel events={events} />}
         {activeTab === "hooks" && <HooksPanel events={events} />}
         {activeTab === "agents" && <AgentsPanel events={events} />}
+        {activeTab === "tokens" && <TokensPanel events={events} />}
         {(activeTab === "timeline" ||
           activeTab === "rules" ||
           activeTab === "plugins") && (
@@ -87,7 +123,7 @@ export function App({ sessionPath }: Props) {
         )}
       </Box>
       <Box borderStyle="single" paddingX={1}>
-        <Text dimColor>1-6: 탭 전환 | ←→: 이동 | q: 종료</Text>
+        <Text dimColor>1-7: 탭 전환 | ←→: 이동 | q: 종료</Text>
       </Box>
     </Box>
   );

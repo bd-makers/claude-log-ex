@@ -5,7 +5,8 @@ export type EventCategory =
   | "plugin"
   | "agent"
   | "tool"
-  | "message";
+  | "message"
+  | "token";
 
 export type RawJsonlLine = {
   type: string;
@@ -15,6 +16,12 @@ export type RawJsonlLine = {
   message?: {
     role?: string;
     content?: RawContent[] | string;
+    usage?: {
+      input_tokens?: number;
+      output_tokens?: number;
+      cache_creation_input_tokens?: number;
+      cache_read_input_tokens?: number;
+    };
   };
   attachment?: RawAttachment;
 };
@@ -89,6 +96,17 @@ export type PluginEvent = LogEvent & {
     pluginType: "mcp" | "skill" | "tool";
     names: string[];
     action: "added" | "removed";
+  };
+};
+
+export type TokenEvent = LogEvent & {
+  category: "token";
+  detail: {
+    fixedTokens: number;
+    nonFixedTokens: number;
+    outputTokens: number;
+    cacheCreationTokens: number;
+    totalInputTokens: number;
   };
 };
 

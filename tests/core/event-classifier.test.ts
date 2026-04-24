@@ -1,6 +1,6 @@
 // tests/core/event-classifier.test.ts
 import { describe, it, expect } from "vitest";
-import { classifyEvent } from "../../src/core/event-classifier";
+import { classifyEvent, classifyUsage } from "../../src/core/event-classifier";
 
 describe("classifyEvent", () => {
   it("classifies hook_success as hook", () => {
@@ -116,5 +116,36 @@ describe("classifyEvent", () => {
   it("returns null for unclassifiable events", () => {
     const raw = { type: "queue-operation", operation: "enqueue" };
     expect(classifyEvent(raw, "test-id")).toBeNull();
+  });
+});
+
+describe("classifyUsage", () => {
+  it("classifies assistant usage as token event", () => {
+    const raw = {
+      type: "assistant",
+      timestamp: "2026-04-23T05:12:17.000Z",
+      message: {
+        usage: {
+          input_tokens: 500,
+          output_tokens: 120,
+          cache_creation_input_tokens: 200,
+          cache_read_input_tokens: 8000,
+        },
+      },
+    };
+    const event = classifyUsage(raw, "test-id");
+    expect(event?.category).toBe("token");
+    expect(event?.detail.fixedTokens).toBe(8000);
+    expect(event?.detail.nonFixedTokens).toBe(700);
+    expect(event?.detail.outputTokens).toBe(120);
+  });
+
+  it("returns null when no usage data", () => {
+    const raw = {
+      type: "assistant",
+      timestamp: "2026-04-23T05:12:17.000Z",
+      message: {},
+    };
+    expect(classifyUsage(raw, "test-id")).toBeNull();
   });
 });
