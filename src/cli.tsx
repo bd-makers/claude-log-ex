@@ -1,4 +1,3 @@
-import React from "react";
 import { render } from "ink";
 import { App } from "./ui/App";
 import { findCurrentSession, listProjectSessions } from "./core/session-finder";
