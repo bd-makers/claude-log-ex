@@ -1,6 +1,7 @@
 // src/core/file-watcher.ts
 import { watch } from "chokidar";
-import { readFileSync, statSync } from "fs";
+import { createReadStream, openSync, readSync, closeSync, statSync } from "fs";
+import { createInterface } from "readline";
 
 type LineHandler = (line: string) => void;
 
@@ -8,41 +9,61 @@ export function tailJsonlFile(
   filePath: string,
   onLine: LineHandler,
 ): () => void {
-  let lastSize = 0;
+  let lastOffset = 0;
+  let watcher: ReturnType<typeof watch> | null = null;
 
-  try {
-    lastSize = statSync(filePath).size;
-  } catch {
-    lastSize = 0;
-  }
+  const startWatcher = () => {
+    watcher = watch(filePath, { persistent: true, usePolling: false });
+    watcher.on("change", () => {
+      try {
+        const currentSize = statSync(filePath).size;
+        if (currentSize <= lastOffset) return;
 
-  try {
-    const content = readFileSync(filePath, "utf-8");
-    content.split("\n").forEach((line) => {
-      if (line.trim()) onLine(line);
+        const newByteCount = currentSize - lastOffset;
+        const buf = Buffer.alloc(newByteCount);
+        const fd = openSync(filePath, "r");
+        readSync(fd, buf, 0, newByteCount, lastOffset);
+        closeSync(fd);
+        lastOffset = currentSize;
+
+        buf
+          .toString("utf-8")
+          .split("\n")
+          .forEach((line) => {
+            if (line.trim()) onLine(line);
+          });
+      } catch {
+        // ignore read errors
+      }
     });
-    lastSize = Buffer.byteLength(content, "utf-8");
-  } catch {
-    // file may not exist yet
-  }
+  };
 
-  const watcher = watch(filePath, { persistent: true, usePolling: false });
+  const stream = createReadStream(filePath, { encoding: "utf-8" });
+  const rl = createInterface({ input: stream, crlfDelay: Infinity });
 
-  watcher.on("change", () => {
-    try {
-      const content = readFileSync(filePath, "utf-8");
-      const currentSize = Buffer.byteLength(content, "utf-8");
-      if (currentSize <= lastSize) return;
-
-      const newContent = content.slice(lastSize);
-      lastSize = currentSize;
-      newContent.split("\n").forEach((line) => {
-        if (line.trim()) onLine(line);
-      });
-    } catch {
-      // ignore read errors
-    }
+  rl.on("line", (line) => {
+    if (line.trim()) onLine(line);
   });
 
-  return () => watcher.close();
+  rl.on("close", () => {
+    try {
+      lastOffset = statSync(filePath).size;
+    } catch {
+      lastOffset = 0;
+    }
+    startWatcher();
+  });
+
+  rl.on("error", () => {
+    startWatcher();
+  });
+
+  stream.on("error", () => {
+    rl.close();
+  });
+
+  return () => {
+    rl.close();
+    watcher?.close();
+  };
 }

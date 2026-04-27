@@ -136,7 +136,7 @@ describe("classifyUsage", () => {
     const event = classifyUsage(raw, "test-id");
     expect(event?.category).toBe("token");
     expect(event?.detail.fixedTokens).toBe(8000);
-    expect(event?.detail.nonFixedTokens).toBe(700);
+    expect(event?.detail.nonFixedTokens).toBe(500);
     expect(event?.detail.outputTokens).toBe(120);
   });
 

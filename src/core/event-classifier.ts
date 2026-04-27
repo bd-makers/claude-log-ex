@@ -172,15 +172,15 @@ export function classifyUsage(
     category: "token",
     summary: t("tokenSummary")(
       cacheRead.toLocaleString(),
-      (inputTokens + cacheCreate).toLocaleString(),
+      inputTokens.toLocaleString(),
       outputTokens.toLocaleString(),
     ),
     detail: {
       fixedTokens: cacheRead,
-      nonFixedTokens: inputTokens + cacheCreate,
+      nonFixedTokens: inputTokens,
       outputTokens,
       cacheCreationTokens: cacheCreate,
-      totalInputTokens: cacheRead + cacheCreate + inputTokens,
+      totalInputTokens: cacheRead + inputTokens,
       model: raw.message?.model,
     },
   };
