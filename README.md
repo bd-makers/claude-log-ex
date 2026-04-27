@@ -1,5 +1,11 @@
 # clogex
 
+[![npm version](https://img.shields.io/npm/v/@bdmakers/claude-log-ex?color=cb3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/@bdmakers/claude-log-ex)
+[![GitHub release](https://img.shields.io/github/v/release/bd-makers/claude-log-ex?logo=github)](https://github.com/bd-makers/claude-log-ex/releases)
+[![npm downloads](https://img.shields.io/npm/dw/@bdmakers/claude-log-ex?color=cb3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/@bdmakers/claude-log-ex)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Bun](https://img.shields.io/badge/runtime-Bun-fbf0df?logo=bun&logoColor=black)](https://bun.sh)
+
 TUI for exploring [Claude Code](https://claude.ai/code) session logs.
 
 Visualizes token usage, context window, skills, hooks, rules, plugins, agents, and more — directly from your Claude Code JSONL session files. Live-tails the session as it runs.
