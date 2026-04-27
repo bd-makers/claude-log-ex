@@ -47,18 +47,8 @@ jobs:
           VERSION="${VERSION#v}"
           ARM64_SHA="${{ steps.sha.outputs.arm64_sha256 }}"
 
-          python3 - <<EOF
-          import re
-
-          with open("Formula/clogex.rb") as f:
-              content = f.read()
-
-          content = re.sub(r'version ".*"', f'version "{VERSION}"', content)
-          content = re.sub(r'sha256 ".*"', f'sha256 "{ARM64_SHA}"', content)
-
-          with open("Formula/clogex.rb", "w") as f:
-              f.write(content)
-          EOF
+          sed -i '' "s/version \".*\"/version \"${VERSION}\"/" Formula/clogex.rb
+          sed -i '' "s/sha256 \".*\"/sha256 \"${ARM64_SHA}\"/" Formula/clogex.rb
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
