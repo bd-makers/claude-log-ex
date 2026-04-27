@@ -1,8 +1,15 @@
 import { render } from "ink";
 import { App } from "./ui/App";
 import { findCurrentSession, listProjectSessions } from "./core/session-finder";
+import { version } from "../package.json";
 
 const args = process.argv.slice(2);
+
+if (args[0] === "--version" || args[0] === "-v") {
+  console.log(version);
+  process.exit(0);
+}
+
 const targetPath = args[0];
 
 let sessionPath: string | null = targetPath ?? null;
