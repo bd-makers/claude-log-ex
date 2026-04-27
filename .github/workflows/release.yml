@@ -9,65 +9,27 @@ permissions:
   contents: write
 
 jobs:
-  build-arm64:
-    name: Build (macOS arm64)
-    runs-on: macos-latest
-    outputs:
-      arm64_sha256: ${{ steps.sha.outputs.arm64_sha256 }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install
-      - name: Build arm64 binary
-        run: bun build src/cli.tsx --compile --outfile clogex-macos-arm64 --target bun
-      - name: Compute sha256
-        id: sha
-        run: echo "arm64_sha256=$(shasum -a 256 clogex-macos-arm64 | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: binary-arm64
-          path: clogex-macos-arm64
-
-  build-x86_64:
-    name: Build (macOS x86_64)
-    runs-on: macos-13
-    outputs:
-      x86_64_sha256: ${{ steps.sha.outputs.x86_64_sha256 }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install
-      - name: Build x86_64 binary
-        run: bun build src/cli.tsx --compile --outfile clogex-macos-x86_64 --target bun
-      - name: Compute sha256
-        id: sha
-        run: echo "x86_64_sha256=$(shasum -a 256 clogex-macos-x86_64 | awk '{print $1}')" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: binary-x86_64
-          path: clogex-macos-x86_64
-
   release:
-    name: Create Release & Update Formula
-    needs: [build-arm64, build-x86_64]
-    runs-on: ubuntu-latest
+    name: Build & Release
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: binary-arm64
-      - uses: actions/download-artifact@v4
-        with:
-          name: binary-x86_64
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
 
-      - name: Generate sha256 files
-        run: |
-          echo "${{ needs.build-arm64.outputs.arm64_sha256 }}  clogex-macos-arm64" > clogex-macos-arm64.sha256
-          echo "${{ needs.build-x86_64.outputs.x86_64_sha256 }}  clogex-macos-x86_64" > clogex-macos-x86_64.sha256
+      - name: Build arm64 binary
+        run: bun build src/cli.tsx --compile --outfile clogex-macos-arm64 --target bun
+
+      - name: Compute sha256
+        id: sha
+        run: echo "arm64_sha256=$(shasum -a 256 clogex-macos-arm64 | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Generate sha256 file
+        run: echo "${{ steps.sha.outputs.arm64_sha256 }}  clogex-macos-arm64" > clogex-macos-arm64.sha256
 
       - name: Create GitHub Release
         env:
@@ -75,9 +37,7 @@ jobs:
         run: |
           gh release create "${{ github.ref_name }}" \
             clogex-macos-arm64 \
-            clogex-macos-x86_64 \
             clogex-macos-arm64.sha256 \
-            clogex-macos-x86_64.sha256 \
             --title "clogex ${{ github.ref_name }}" \
             --generate-notes
 
@@ -85,8 +45,7 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
-          ARM64_SHA="${{ needs.build-arm64.outputs.arm64_sha256 }}"
-          X86_64_SHA="${{ needs.build-x86_64.outputs.x86_64_sha256 }}"
+          ARM64_SHA="${{ steps.sha.outputs.arm64_sha256 }}"
 
           python3 - <<EOF
           import re
@@ -95,19 +54,7 @@ jobs:
               content = f.read()
 
           content = re.sub(r'version ".*"', f'version "{VERSION}"', content)
-
-          # Replace sha256 inside on_arm block
-          content = re.sub(
-              r'(on_arm do.*?sha256 ")[^"]*(")',
-              rf'\g<1>{ARM64_SHA}\g<2>',
-              content, flags=re.DOTALL
-          )
-          # Replace sha256 inside on_intel block
-          content = re.sub(
-              r'(on_intel do.*?sha256 ")[^"]*(")',
-              rf'\g<1>{X86_64_SHA}\g<2>',
-              content, flags=re.DOTALL
-          )
+          content = re.sub(r'sha256 ".*"', f'sha256 "{ARM64_SHA}"', content)
 
           with open("Formula/clogex.rb", "w") as f:
               f.write(content)

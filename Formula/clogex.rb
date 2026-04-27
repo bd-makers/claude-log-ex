@@ -9,21 +9,10 @@ class Clogex < Formula
       url "https://github.com/bd-makers/claude-log-ex/releases/download/v#{version}/clogex-macos-arm64"
       sha256 "PLACEHOLDER_ARM64_SHA256"
     end
-    on_intel do
-      url "https://github.com/bd-makers/claude-log-ex/releases/download/v#{version}/clogex-macos-x86_64"
-      sha256 "PLACEHOLDER_X86_64_SHA256"
-    end
   end
 
   def install
-    on_macos do
-      on_arm do
-        bin.install "clogex-macos-arm64" => "clogex"
-      end
-      on_intel do
-        bin.install "clogex-macos-x86_64" => "clogex"
-      end
-    end
+    bin.install "clogex-macos-arm64" => "clogex"
   end
 
   test do
