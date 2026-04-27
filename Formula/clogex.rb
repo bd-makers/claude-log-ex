@@ -1,13 +1,13 @@
 class Clogex < Formula
   desc "TUI for exploring Claude Code session logs"
   homepage "https://github.com/bd-makers/claude-log-ex"
-  version "0.1.0"
+  version "0.1.1"
   license "MIT"
 
   on_macos do
     on_arm do
       url "https://github.com/bd-makers/claude-log-ex/releases/download/v#{version}/clogex-macos-arm64"
-      sha256 "a74d4863a98485fd7793e43cbede3f3defd0489e30512027f43bcc29fa647fde"
+      sha256 "3927e9e2447043bb4e7707cd9fbbe52106ca36acdfab8dbe006bce2a2684e06b"
     end
   end
 
