@@ -176,6 +176,7 @@ export function classifyUsage(
       outputTokens,
       cacheCreationTokens: cacheCreate,
       totalInputTokens: cacheRead + cacheCreate + inputTokens,
+      model: raw.message?.model,
     },
   };
 }

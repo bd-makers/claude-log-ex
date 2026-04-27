@@ -15,6 +15,7 @@ export type RawJsonlLine = {
   isSidechain?: boolean;
   message?: {
     role?: string;
+    model?: string;
     content?: RawContent[] | string;
     usage?: {
       input_tokens?: number;
@@ -107,6 +108,7 @@ export type TokenEvent = LogEvent & {
     outputTokens: number;
     cacheCreationTokens: number;
     totalInputTokens: number;
+    model?: string;
   };
 };
 

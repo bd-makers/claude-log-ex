@@ -45,13 +45,15 @@ export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
       <Box flexDirection="column" borderStyle="single" paddingX={1}>
         <Text bold>누적 합계</Text>
         <Box gap={2}>
-          <Text color="green">고정(캐시): {totals.fixed.toLocaleString()}</Text>
-          <Text color="yellow">비고정: {totals.nonFixed.toLocaleString()}</Text>
-          <Text color="cyan">출력: {totals.output.toLocaleString()}</Text>
+          <Text color="green">캐시: {totals.fixed.toLocaleString()}</Text>
+          <Text color="yellow">논캐시: {totals.nonFixed.toLocaleString()}</Text>
+          <Text color="cyan">응답토큰: {totals.output.toLocaleString()}</Text>
         </Box>
         <Box gap={1}>
-          <Text color="green">{bar(fixedRatio)}</Text>
-          <Text dimColor>{Math.round(fixedRatio * 100)}% 캐시</Text>
+          <Text dimColor>캐시 히트율</Text>
+          <Text color="red">{bar(fixedRatio)}</Text>
+          <Text dimColor>{Math.round(fixedRatio * 100)}%</Text>
+          <Text dimColor>(캐시 재사용/전체 입력)</Text>
         </Box>
       </Box>
       <Text bold>턴별 내역</Text>
@@ -71,12 +73,13 @@ export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
               <Text color="gray">
                 {e.timestamp.toISOString().slice(11, 19)}
               </Text>
-              <Text color="green">고정:{d.fixedTokens.toLocaleString()}</Text>
+              <Text color="green">캐시:{d.fixedTokens.toLocaleString()}</Text>
               <Text color="yellow">
-                비고정:{d.nonFixedTokens.toLocaleString()}
+                논캐시:{d.nonFixedTokens.toLocaleString()}
               </Text>
-              <Text color="cyan">출력:{d.outputTokens.toLocaleString()}</Text>
-              <Text dimColor>
+              <Text color="cyan">응답:{d.outputTokens.toLocaleString()}</Text>
+              <Text dimColor>캐시 히트율</Text>
+              <Text color="red">
                 {bar(ratio, 12)} {Math.round(ratio * 100)}%
               </Text>
             </Box>

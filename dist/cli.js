@@ -45340,7 +45340,8 @@ function classifyUsage(raw, id) {
       nonFixedTokens: inputTokens + cacheCreate,
       outputTokens,
       cacheCreationTokens: cacheCreate,
-      totalInputTokens: cacheRead + cacheCreate + inputTokens
+      totalInputTokens: cacheRead + cacheCreate + inputTokens,
+      model: raw.message?.model
     }
   };
 }
@@ -46320,21 +46321,21 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 color: "green",
                 children: [
-                  "고정(캐시): ",
+                  "캐시: ",
                   totals.fixed.toLocaleString()
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 color: "yellow",
                 children: [
-                  "비고정: ",
+                  "논캐시: ",
                   totals.nonFixed.toLocaleString()
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 color: "cyan",
                 children: [
-                  "출력: ",
+                  "응답토큰: ",
                   totals.output.toLocaleString()
                 ]
               }, undefined, true, undefined, this)
@@ -46344,16 +46345,24 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
             gap: 1,
             children: [
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
-                color: "green",
+                dimColor: true,
+                children: "캐시 히트율"
+              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
+                color: "red",
                 children: bar(fixedRatio)
               }, undefined, false, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 dimColor: true,
                 children: [
                   Math.round(fixedRatio * 100),
-                  "% 캐시"
+                  "%"
                 ]
-              }, undefined, true, undefined, this)
+              }, undefined, true, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
+                dimColor: true,
+                children: "(캐시 재사용/전체 입력)"
+              }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this)
         ]
@@ -46375,26 +46384,30 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               color: "green",
               children: [
-                "고정:",
+                "캐시:",
                 d.fixedTokens.toLocaleString()
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               color: "yellow",
               children: [
-                "비고정:",
+                "논캐시:",
                 d.nonFixedTokens.toLocaleString()
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               color: "cyan",
               children: [
-                "출력:",
+                "응답:",
                 d.outputTokens.toLocaleString()
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               dimColor: true,
+              children: "캐시 히트율"
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
+              color: "red",
               children: [
                 bar(ratio, 12),
                 " ",
@@ -46589,8 +46602,243 @@ function PluginsPanel({
   }, undefined, true, undefined, this);
 }
 
-// src/ui/App.tsx
+// src/ui/panels/ContextPanel.tsx
 var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
+var CONTEXT_LIMITS = {
+  "claude-opus-4": 200000,
+  "claude-sonnet-4": 200000,
+  "claude-haiku-4": 200000,
+  "claude-3-5-sonnet": 200000,
+  "claude-3-5-haiku": 200000,
+  "claude-3-opus": 200000,
+  "claude-3-haiku": 200000
+};
+function getContextLimit(model) {
+  if (!model)
+    return 200000;
+  for (const key of Object.keys(CONTEXT_LIMITS)) {
+    if (model.includes(key))
+      return CONTEXT_LIMITS[key];
+  }
+  return 200000;
+}
+function barColor(ratio) {
+  if (ratio >= 0.9)
+    return "red";
+  if (ratio >= 0.75)
+    return "yellow";
+  return "green";
+}
+function SegmentBar({
+  fixedRatio,
+  nonFixedRatio,
+  width = 30
+}) {
+  const fixed = Math.round(Math.min(fixedRatio, 1) * width);
+  const nonFixed = Math.round(Math.min(nonFixedRatio, 1) * width);
+  const clamped = Math.min(fixed + nonFixed, width);
+  const nonFixedActual = Math.max(0, clamped - fixed);
+  const empty = width - fixed - nonFixedActual;
+  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+        color: "gray",
+        children: "█".repeat(fixed)
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+        color: "green",
+        children: "█".repeat(nonFixedActual)
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+        dimColor: true,
+        children: "░".repeat(Math.max(0, empty))
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+}
+function ContextPanel({ events, scrollOffset, visibleHeight }) {
+  const tokenEvents = events.filter((e) => e.category === "token");
+  if (tokenEvents.length === 0) {
+    return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+      dimColor: true,
+      children: "토큰 데이터 없음. assistant 메시지 대기 중..."
+    }, undefined, false, undefined, this);
+  }
+  const latest = tokenEvents[tokenEvents.length - 1];
+  const latestDetail = latest.detail;
+  const model = tokenEvents.map((e) => e.detail.model).filter(Boolean).pop();
+  const limit = getContextLimit(model);
+  const latestRatio = latestDetail.totalInputTokens / limit;
+  const color = barColor(latestRatio);
+  const visibleTurns = Math.max(5, visibleHeight - 10);
+  const turns = tokenEvents.slice(scrollOffset, scrollOffset + visibleTurns);
+  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+    flexDirection: "column",
+    gap: 1,
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+        bold: true,
+        underline: true,
+        children: "Context Window Usage"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+        flexDirection: "column",
+        borderStyle: "single",
+        paddingX: 1,
+        gap: 0,
+        children: [
+          /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+            gap: 2,
+            children: [
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                bold: true,
+                children: "모델:"
+              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                color: "cyan",
+                children: model ?? "unknown"
+              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                bold: true,
+                children: "한도:"
+              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                children: [
+                  limit.toLocaleString(),
+                  " tokens"
+                ]
+              }, undefined, true, undefined, this)
+            ]
+          }, undefined, true, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+            gap: 1,
+            children: [
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(SegmentBar, {
+                fixedRatio: latestDetail.fixedTokens / limit,
+                nonFixedRatio: latestDetail.nonFixedTokens / limit
+              }, undefined, false, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                color,
+                bold: true,
+                children: [
+                  Math.round(latestRatio * 100),
+                  "%"
+                ]
+              }, undefined, true, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                dimColor: true,
+                children: [
+                  "(",
+                  latestDetail.totalInputTokens.toLocaleString(),
+                  " /",
+                  " ",
+                  limit.toLocaleString(),
+                  ")"
+                ]
+              }, undefined, true, undefined, this)
+            ]
+          }, undefined, true, undefined, this),
+          /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+            gap: 2,
+            children: [
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                color: "gray",
+                children: [
+                  "■ 시스템프롬프트: ",
+                  latestDetail.fixedTokens.toLocaleString()
+                ]
+              }, undefined, true, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                color: "green",
+                children: [
+                  "■ 비고정: ",
+                  latestDetail.nonFixedTokens.toLocaleString()
+                ]
+              }, undefined, true, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                color: "yellow",
+                children: [
+                  "캐시 생성: ",
+                  latestDetail.cacheCreationTokens.toLocaleString()
+                ]
+              }, undefined, true, undefined, this),
+              /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                color: "cyan",
+                children: [
+                  "출력: ",
+                  latestDetail.outputTokens.toLocaleString()
+                ]
+              }, undefined, true, undefined, this)
+            ]
+          }, undefined, true, undefined, this)
+        ]
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+        bold: true,
+        children: [
+          "턴별 컨텍스트 사용 (",
+          tokenEvents.length,
+          " turns)"
+        ]
+      }, undefined, true, undefined, this),
+      turns.map((e, i) => {
+        const d = e.detail;
+        const ratio = d.totalInputTokens / limit;
+        const c = barColor(ratio);
+        const turnNum = scrollOffset + i + 1;
+        return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+          gap: 1,
+          children: [
+            /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+              color: "gray",
+              dimColor: true,
+              children: [
+                "#",
+                String(turnNum).padStart(2, "0")
+              ]
+            }, undefined, true, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+              color: "gray",
+              dimColor: true,
+              children: e.timestamp.toISOString().slice(11, 16)
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(SegmentBar, {
+              fixedRatio: d.fixedTokens / limit,
+              nonFixedRatio: d.nonFixedTokens / limit,
+              width: 20
+            }, undefined, false, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+              color: c,
+              children: [
+                Math.round(ratio * 100),
+                "%"
+              ]
+            }, undefined, true, undefined, this),
+            /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+              dimColor: true,
+              children: d.totalInputTokens.toLocaleString()
+            }, undefined, false, undefined, this)
+          ]
+        }, e.id, true, undefined, this);
+      }),
+      tokenEvents.length > visibleTurns && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+        dimColor: true,
+        children: [
+          "↑↓ 스크롤 (",
+          scrollOffset + 1,
+          "-",
+          Math.min(scrollOffset + visibleTurns, tokenEvents.length),
+          "/",
+          tokenEvents.length,
+          ")"
+        ]
+      }, undefined, true, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+}
+
+// src/ui/App.tsx
+var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
 var TABS = [
   "timeline",
   "skills",
@@ -46598,7 +46846,8 @@ var TABS = [
   "rules",
   "plugins",
   "agents",
-  "tokens"
+  "tokens",
+  "context"
 ];
 function App2({ sessionPath }) {
   const [events, setEvents] = import_react22.useState([]);
@@ -46634,9 +46883,9 @@ function App2({ sessionPath }) {
         return;
       const btn = parseInt(m[1]);
       if (btn === 64)
-        setScrollOffset((o) => Math.max(0, o - 3));
+        setScrollOffset((o) => Math.max(0, o - 1));
       if (btn === 65)
-        setScrollOffset((o) => o + 3);
+        setScrollOffset((o) => o + 1);
     };
     process.stdin.on("data", handleData);
     return () => {
@@ -46677,65 +46926,70 @@ function App2({ sessionPath }) {
   }, { fixed: 0, nonFixed: 0 }), [events]);
   const filtered = activeTab === "timeline" ? events : events.filter((e) => e.category === activeTab.replace("s", "") || e.category === activeTab.slice(0, -1));
   const contentHeight = terminalRows - 4;
-  return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+  return /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Box_default, {
     flexDirection: "column",
     height: terminalRows,
     children: [
-      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Header, {
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Header, {
         sessionPath,
         eventCount: events.length,
         totalTokens
       }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(TabBar, {
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(TabBar, {
         tabs: TABS,
         active: activeTab
       }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Box_default, {
         flexDirection: "column",
         height: contentHeight,
         overflow: "hidden",
         children: [
-          activeTab === "skills" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(SkillsPanel, {
+          activeTab === "skills" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(SkillsPanel, {
             events,
             scrollOffset,
             visibleHeight: contentHeight
           }, undefined, false, undefined, this),
-          activeTab === "hooks" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(HooksPanel, {
+          activeTab === "hooks" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(HooksPanel, {
             events,
             scrollOffset,
             visibleHeight: contentHeight
           }, undefined, false, undefined, this),
-          activeTab === "agents" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(AgentsPanel, {
+          activeTab === "agents" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(AgentsPanel, {
             events,
             scrollOffset,
             visibleHeight: contentHeight
           }, undefined, false, undefined, this),
-          activeTab === "tokens" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(TokensPanel, {
+          activeTab === "tokens" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(TokensPanel, {
             events,
             scrollOffset,
             visibleHeight: contentHeight
           }, undefined, false, undefined, this),
-          activeTab === "rules" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(RulesPanel, {
+          activeTab === "rules" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(RulesPanel, {
             events,
             scrollOffset,
             visibleHeight: contentHeight
           }, undefined, false, undefined, this),
-          activeTab === "plugins" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(PluginsPanel, {
+          activeTab === "plugins" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(PluginsPanel, {
             events,
             scrollOffset,
             visibleHeight: contentHeight
           }, undefined, false, undefined, this),
-          activeTab === "timeline" && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(jsx_dev_runtime9.Fragment, {
+          activeTab === "context" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(ContextPanel, {
+            events,
+            scrollOffset,
+            visibleHeight: contentHeight
+          }, undefined, false, undefined, this),
+          activeTab === "timeline" && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(jsx_dev_runtime10.Fragment, {
             children: [
-              filtered.slice(-contentHeight).slice(scrollOffset > 0 ? scrollOffset : 0).map((event) => /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+              filtered.slice(-contentHeight).slice(scrollOffset > 0 ? scrollOffset : 0).map((event) => /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Box_default, {
                 gap: 1,
                 children: [
-                  /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Text, {
                     color: "gray",
                     dimColor: true,
                     children: event.timestamp.toISOString().slice(11, 19)
                   }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Text, {
                     color: categoryColor(event.category),
                     children: [
                       "[",
@@ -46743,12 +46997,12 @@ function App2({ sessionPath }) {
                       "]"
                     ]
                   }, undefined, true, undefined, this),
-                  /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+                  /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Text, {
                     children: event.summary
                   }, undefined, false, undefined, this)
                 ]
               }, event.id, true, undefined, this)),
-              filtered.length === 0 && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+              filtered.length === 0 && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Text, {
                 dimColor: true,
                 children: "이벤트 없음..."
               }, undefined, false, undefined, this)
@@ -46756,12 +47010,12 @@ function App2({ sessionPath }) {
           }, undefined, true, undefined, this)
         ]
       }, undefined, true, undefined, this),
-      /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Box_default, {
+      /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Box_default, {
         borderStyle: "single",
         paddingX: 1,
-        children: /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
+        children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Text, {
           dimColor: true,
-          children: "1-7: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료"
+          children: "1-8: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료"
         }, undefined, false, undefined, this)
       }, undefined, false, undefined, this)
     ]
@@ -46818,7 +47072,7 @@ function listProjectSessions(cwd2) {
 }
 
 // src/cli.tsx
-var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
+var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
 var args = process.argv.slice(2);
 var targetPath = args[0];
 var sessionPath = targetPath ?? null;
@@ -46837,6 +47091,6 @@ if (!sessionPath) {
   console.error("사용법: cle [session.jsonl 경로]");
   process.exit(1);
 }
-render_default(/* @__PURE__ */ jsx_dev_runtime10.jsxDEV(App2, {
+render_default(/* @__PURE__ */ jsx_dev_runtime11.jsxDEV(App2, {
   sessionPath
 }, undefined, false, undefined, this));

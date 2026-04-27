@@ -12,6 +12,7 @@ import { AgentsPanel } from "./panels/AgentsPanel";
 import { TokensPanel } from "./panels/TokensPanel";
 import { RulesPanel } from "./panels/RulesPanel";
 import { PluginsPanel } from "./panels/PluginsPanel";
+import { ContextPanel } from "./panels/ContextPanel";
 
 type Tab =
   | "timeline"
@@ -20,7 +21,8 @@ type Tab =
   | "rules"
   | "plugins"
   | "agents"
-  | "tokens";
+  | "tokens"
+  | "context";
 const TABS: Tab[] = [
   "timeline",
   "skills",
@@ -29,6 +31,7 @@ const TABS: Tab[] = [
   "plugins",
   "agents",
   "tokens",
+  "context",
 ];
 
 type Props = { sessionPath: string };
@@ -180,6 +183,13 @@ export function App({ sessionPath }: Props) {
             visibleHeight={contentHeight}
           />
         )}
+        {activeTab === "context" && (
+          <ContextPanel
+            events={events}
+            scrollOffset={scrollOffset}
+            visibleHeight={contentHeight}
+          />
+        )}
         {activeTab === "timeline" && (
           <>
             {filtered
@@ -201,7 +211,7 @@ export function App({ sessionPath }: Props) {
         )}
       </Box>
       <Box borderStyle="single" paddingX={1}>
-        <Text dimColor>1-7: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료</Text>
+        <Text dimColor>1-8: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료</Text>
       </Box>
     </Box>
   );
