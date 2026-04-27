@@ -1,5 +1,5 @@
 {
-  "name": "clogex",
+  "name": "@bdmakers/claude-log-ex",
   "version": "0.1.2",
   "description": "TUI for exploring Claude Code session logs",
   "bin": {
@@ -28,6 +28,9 @@
     "cli",
     "logs"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=18"
