@@ -2,15 +2,24 @@
 
 TUI for exploring [Claude Code](https://claude.ai/code) session logs.
 
-Visualizes token usage, context window, skills, hooks, rules, plugins, agents, and more — directly from your Claude Code JSONL session files.
+Visualizes token usage, context window, skills, hooks, rules, plugins, agents, and more — directly from your Claude Code JSONL session files. Live-tails the session as it runs.
 
 ## Install
+
+### Homebrew (macOS, recommended)
+
+```sh
+brew tap bd-makers/claude-log-ex https://github.com/bd-makers/claude-log-ex
+brew install clogex
+```
+
+### npm
 
 ```sh
 npm install -g clogex
 ```
 
-Or with bun:
+### Bun
 
 ```sh
 bun add -g clogex
@@ -24,7 +33,26 @@ clogex
 
 # specify a session file directly
 clogex ~/.claude/projects/<project-hash>/<session>.jsonl
+
+# show version
+clogex --version
+
+# Korean UI
+clogex --ko
+
+# English UI (default)
+clogex --en
 ```
+
+## Screenshots
+
+| Timeline | Hooks |
+|----------|-------|
+| ![timeline](screenshot_01.jpg) | ![hooks](screenshot_02.jpg) |
+
+| Tokens | Context |
+|--------|---------|
+| ![tokens](screenshot_03.jpg) | ![context](screenshot_04.jpg) |
 
 ## Tabs
 
@@ -33,8 +61,8 @@ clogex ~/.claude/projects/<project-hash>/<session>.jsonl
 | `1` | timeline | All events in chronological order |
 | `2` | skills | Skill invocations |
 | `3` | hooks | Hook executions |
-| `4` | rules | Active rules |
-| `5` | plugins | Loaded plugins |
+| `4` | rules | Active rules loaded |
+| `5` | plugins | Loaded MCP plugins |
 | `6` | agents | Subagent dispatches |
 | `7` | tokens | Token usage per turn with cache hit rate |
 | `8` | context | Context window usage visualization |
@@ -57,7 +85,12 @@ Requires [Bun](https://bun.sh).
 git clone https://github.com/bd-makers/claude-log-ex.git
 cd claude-log-ex
 bun install
-bun run build  # compiles native binary to ~/.local/bin/clogex
+
+# install to ~/.local/bin/clogex
+bun run build
+
+# build dist/cli.js for npm publishing
+bun run build:npm
 ```
 
 ## License
