@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
+import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
@@ -28,13 +29,13 @@ export function SkillsPanel({ events, scrollOffset, visibleHeight }: Props) {
       {listings.length > 0 && (
         <Box flexDirection="column">
           <Text color="cyan">
-            사용 가능한 스킬:{" "}
-            {(listings[0].detail as { skillCount?: number }).skillCount ?? "?"}
-            개
+            {t("availableSkills")(
+              (listings[0].detail as { skillCount?: number }).skillCount ?? 0,
+            )}
           </Text>
         </Box>
       )}
-      <Text bold>호출된 스킬 ({invocations.length})</Text>
+      <Text bold>{t("invokedSkills")(invocations.length)}</Text>
       {visibleInvocations.map((e) => {
         const d = e.detail as { skillName: string };
         return (
@@ -45,9 +46,7 @@ export function SkillsPanel({ events, scrollOffset, visibleHeight }: Props) {
           </Box>
         );
       })}
-      {invocations.length === 0 && (
-        <Text dimColor>이 세션에서 스킬 호출 없음</Text>
-      )}
+      {invocations.length === 0 && <Text dimColor>{t("noSkillsInvoked")}</Text>}
     </Box>
   );
 }

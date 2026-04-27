@@ -2,6 +2,7 @@ import { render } from "ink";
 import { App } from "./ui/App";
 import { findCurrentSession, listProjectSessions } from "./core/session-finder";
 import { version } from "../package.json";
+import { setLocale, t } from "./i18n";
 
 const args = process.argv.slice(2);
 
@@ -10,7 +11,10 @@ if (args[0] === "--version" || args[0] === "-v") {
   process.exit(0);
 }
 
-const targetPath = args[0];
+if (args.includes("--ko")) setLocale("ko");
+
+const filteredArgs = args.filter((a) => a !== "--ko" && a !== "--en");
+const targetPath = filteredArgs[0];
 
 let sessionPath: string | null = targetPath ?? null;
 
@@ -22,13 +26,13 @@ if (!sessionPath) {
   const sessions = listProjectSessions();
   if (sessions.length > 0) {
     sessionPath = sessions[0];
-    console.error(`세션 감지 실패. 최근 세션 사용: ${sessionPath}`);
+    console.error(t("sessionFallback")(sessionPath));
   }
 }
 
 if (!sessionPath) {
-  console.error("❌ Claude 세션을 찾을 수 없습니다.");
-  console.error("사용법: cle [session.jsonl 경로]");
+  console.error(t("sessionNotFound"));
+  console.error(t("usage"));
   process.exit(1);
 }
 

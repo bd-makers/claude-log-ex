@@ -36290,8 +36290,8 @@ var require_parse = __commonJS((exports, module) => {
           brace.value = brace.output = "\\{";
           value = output = "\\}";
           state.output = out;
-          for (const t of toks) {
-            state.output += t.output || t.value;
+          for (const t2 of toks) {
+            state.output += t2.output || t2.value;
           }
         }
         push({ type: "brace", value, output });
@@ -45181,6 +45181,85 @@ function TabBar({ tabs, active }) {
   }, undefined, false, undefined, this);
 }
 
+// src/i18n/index.ts
+var locale = "en";
+var setLocale = (l) => {
+  locale = l;
+};
+var strings = {
+  en: {
+    sessionFallback: (path) => `Session detection failed. Using recent session: ${path}`,
+    sessionNotFound: "❌ Claude session not found.",
+    usage: "Usage: clogex [session.jsonl path]",
+    noEvents: "No events...",
+    footerHint: "1-8: switch tab | ←→: navigate | ↑↓: scroll | q: quit",
+    availableSkills: (n) => `Available skills: ${n}`,
+    invokedSkills: (n) => `Invoked Skills (${n})`,
+    noSkillsInvoked: "No skills invoked in this session",
+    noAgents: "No agent calls",
+    noTokenData: "No token data. Waiting for assistant message...",
+    cumulative: "Cumulative",
+    cached: "cached:",
+    nonCached: "non-cached:",
+    outputTokens: "output:",
+    cacheHitRate: "Cache hit rate",
+    cacheHitRateNote: "(cache reuse/total input)",
+    perTurn: "Per-turn breakdown",
+    model: "Model:",
+    limit: "Limit:",
+    systemPrompt: "■ System prompt:",
+    nonFixed: "■ Non-fixed:",
+    cacheCreation: "Cache creation:",
+    output: "Output:",
+    perTurnContext: (n) => `Context usage per turn (${n} turns)`,
+    scrollHint: (from, to, total) => `↑↓ scroll (${from}-${to}/${total})`,
+    scrollHintInline: (from, to, total) => ` [↑↓ scroll: ${from}-${to}/${total}]`,
+    noContextEvents: "No hook_additional_context events",
+    noPluginEvents: "No plugin events",
+    mcpServers: (n) => `MCP Servers (${n})`,
+    pluginCount: (n) => `+${n}`,
+    moreItems: (n) => ` and ${n} more`,
+    tokenSummary: (fixed, nonFixed, output) => `fixed ${fixed} / non-fixed ${nonFixed} / output ${output}`
+  },
+  ko: {
+    sessionFallback: (path) => `세션 감지 실패. 최근 세션 사용: ${path}`,
+    sessionNotFound: "❌ Claude 세션을 찾을 수 없습니다.",
+    usage: "사용법: clogex [session.jsonl 경로]",
+    noEvents: "이벤트 없음...",
+    footerHint: "1-8: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료",
+    availableSkills: (n) => `사용 가능한 스킬: ${n}개`,
+    invokedSkills: (n) => `호출된 스킬 (${n})`,
+    noSkillsInvoked: "이 세션에서 스킬 호출 없음",
+    noAgents: "에이전트 호출 없음",
+    noTokenData: "토큰 데이터 없음. assistant 메시지 대기 중...",
+    cumulative: "누적 합계",
+    cached: "캐시:",
+    nonCached: "논캐시:",
+    outputTokens: "응답토큰:",
+    cacheHitRate: "캐시 히트율",
+    cacheHitRateNote: "(캐시 재사용/전체 입력)",
+    perTurn: "턴별 내역",
+    model: "모델:",
+    limit: "한도:",
+    systemPrompt: "■ 시스템프롬프트:",
+    nonFixed: "■ 비고정:",
+    cacheCreation: "캐시 생성:",
+    output: "출력:",
+    perTurnContext: (n) => `턴별 컨텍스트 사용 (${n} turns)`,
+    scrollHint: (from, to, total) => `↑↓ 스크롤 (${from}-${to}/${total})`,
+    scrollHintInline: (from, to, total) => ` [↑↓ 스크롤: ${from}-${to}/${total}]`,
+    noContextEvents: "hook_additional_context 이벤트 없음",
+    noPluginEvents: "플러그인 이벤트 없음",
+    mcpServers: (n) => `MCP 서버 (${n})`,
+    pluginCount: (n) => `+${n}개`,
+    moreItems: (n) => ` 외 ${n}개`,
+    tokenSummary: (fixed, nonFixed, output) => `고정 ${fixed} / 비고정 ${nonFixed} / 출력 ${output}`
+  }
+};
+function t(key) {
+  return (locale === "ko" ? strings.ko : strings.en)[key];
+}
+
 // src/core/event-classifier.ts
 function classifyEvent(raw, id) {
   const timestamp = raw.timestamp ? new Date(raw.timestamp) : new Date;
@@ -45335,7 +45414,7 @@ function classifyUsage(raw, id) {
     id,
     timestamp,
     category: "token",
-    summary: `고정 ${cacheRead.toLocaleString()} / 비고정 ${(inputTokens + cacheCreate).toLocaleString()} / 출력 ${outputTokens.toLocaleString()}`,
+    summary: t("tokenSummary")(cacheRead.toLocaleString(), (inputTokens + cacheCreate).toLocaleString(), outputTokens.toLocaleString()),
     detail: {
       fixedTokens: cacheRead,
       nonFixedTokens: inputTokens + cacheCreate,
@@ -46098,22 +46177,13 @@ function SkillsPanel({ events, scrollOffset, visibleHeight }) {
         flexDirection: "column",
         children: /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(Text, {
           color: "cyan",
-          children: [
-            "사용 가능한 스킬:",
-            " ",
-            listings[0].detail.skillCount ?? "?",
-            "개"
-          ]
-        }, undefined, true, undefined, this)
+          children: t("availableSkills")(listings[0].detail.skillCount ?? 0)
+        }, undefined, false, undefined, this)
       }, undefined, false, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(Text, {
         bold: true,
-        children: [
-          "호출된 스킬 (",
-          invocations.length,
-          ")"
-        ]
-      }, undefined, true, undefined, this),
+        children: t("invokedSkills")(invocations.length)
+      }, undefined, false, undefined, this),
       visibleInvocations.map((e) => {
         const d = e.detail;
         return /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(Box_default, {
@@ -46136,7 +46206,7 @@ function SkillsPanel({ events, scrollOffset, visibleHeight }) {
       }),
       invocations.length === 0 && /* @__PURE__ */ jsx_dev_runtime3.jsxDEV(Text, {
         dimColor: true,
-        children: "이 세션에서 스킬 호출 없음"
+        children: t("noSkillsInvoked")
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
@@ -46264,7 +46334,7 @@ function AgentsPanel({ events, scrollOffset, visibleHeight }) {
       }),
       agentEvents.length === 0 && /* @__PURE__ */ jsx_dev_runtime5.jsxDEV(Text, {
         dimColor: true,
-        children: "에이전트 호출 없음"
+        children: t("noAgents")
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
@@ -46281,7 +46351,7 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
   if (tokenEvents.length === 0) {
     return /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
       dimColor: true,
-      children: "토큰 데이터 없음. assistant 메시지 대기 중..."
+      children: t("noTokenData")
     }, undefined, false, undefined, this);
   }
   const totals = tokenEvents.reduce((acc, e) => {
@@ -46314,7 +46384,7 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
         children: [
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
             bold: true,
-            children: "누적 합계"
+            children: t("cumulative")
           }, undefined, false, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Box_default, {
             gap: 2,
@@ -46322,21 +46392,24 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 color: "green",
                 children: [
-                  "캐시: ",
+                  t("cached"),
+                  " ",
                   totals.fixed.toLocaleString()
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 color: "yellow",
                 children: [
-                  "논캐시: ",
+                  t("nonCached"),
+                  " ",
                   totals.nonFixed.toLocaleString()
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 color: "cyan",
                 children: [
-                  "응답토큰: ",
+                  t("outputTokens"),
+                  " ",
                   totals.output.toLocaleString()
                 ]
               }, undefined, true, undefined, this)
@@ -46347,7 +46420,7 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
             children: [
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 dimColor: true,
-                children: "캐시 히트율"
+                children: t("cacheHitRate")
               }, undefined, false, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 color: "red",
@@ -46362,7 +46435,7 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
                 dimColor: true,
-                children: "(캐시 재사용/전체 입력)"
+                children: t("cacheHitRateNote")
               }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this)
@@ -46370,7 +46443,7 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
       }, undefined, true, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
         bold: true,
-        children: "턴별 내역"
+        children: t("perTurn")
       }, undefined, false, undefined, this),
       tokenEvents.slice(scrollOffset, scrollOffset + Math.max(5, visibleHeight - 8)).map((e) => {
         const d = e.detail;
@@ -46385,27 +46458,27 @@ function TokensPanel({ events, scrollOffset, visibleHeight }) {
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               color: "green",
               children: [
-                "캐시:",
+                t("cached"),
                 d.fixedTokens.toLocaleString()
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               color: "yellow",
               children: [
-                "논캐시:",
+                t("nonCached"),
                 d.nonFixedTokens.toLocaleString()
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               color: "cyan",
               children: [
-                "응답:",
+                t("outputTokens"),
                 d.outputTokens.toLocaleString()
               ]
             }, undefined, true, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               dimColor: true,
-              children: "캐시 히트율"
+              children: t("cacheHitRate")
             }, undefined, false, undefined, this),
             /* @__PURE__ */ jsx_dev_runtime6.jsxDEV(Text, {
               color: "red",
@@ -46442,12 +46515,12 @@ function RulesPanel({ events, scrollOffset, visibleHeight }) {
           "Rules / Context (",
           ruleEvents.length,
           ")",
-          ruleEvents.length > maxVisible ? ` [↑↓ 스크롤: ${scrollOffset + 1}-${Math.min(scrollOffset + maxVisible, ruleEvents.length)}/${ruleEvents.length}]` : ""
+          ruleEvents.length > maxVisible ? t("scrollHintInline")(scrollOffset + 1, Math.min(scrollOffset + maxVisible, ruleEvents.length), ruleEvents.length) : ""
         ]
       }, undefined, true, undefined, this),
       ruleEvents.length === 0 && /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(Text, {
         dimColor: true,
-        children: "hook_additional_context 이벤트 없음"
+        children: t("noContextEvents")
       }, undefined, false, undefined, this),
       visible.map((e) => {
         const d = e.detail;
@@ -46521,12 +46594,8 @@ function PluginsPanel({
           /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(Text, {
             bold: true,
             color: "magenta",
-            children: [
-              "MCP 서버 (",
-              mcpEvents.length,
-              ")"
-            ]
-          }, undefined, true, undefined, this),
+            children: t("mcpServers")(mcpEvents.length)
+          }, undefined, false, undefined, this),
           mcpEvents.map((e) => {
             const d = e.detail;
             return /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(Box_default, {
@@ -46575,19 +46644,15 @@ function PluginsPanel({
                     }, undefined, false, undefined, this),
                     /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(Text, {
                       color: "cyan",
-                      children: [
-                        "+",
-                        d.names.length,
-                        "개"
-                      ]
-                    }, undefined, true, undefined, this)
+                      children: t("pluginCount")(d.names.length)
+                    }, undefined, false, undefined, this)
                   ]
                 }, undefined, true, undefined, this),
                 /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(Text, {
                   dimColor: true,
                   children: [
                     d.names.slice(0, 5).join(", "),
-                    d.names.length > 5 ? ` 외 ${d.names.length - 5}개` : ""
+                    d.names.length > 5 ? t("moreItems")(d.names.length - 5) : ""
                   ]
                 }, undefined, true, undefined, this)
               ]
@@ -46597,7 +46662,7 @@ function PluginsPanel({
       }, undefined, true, undefined, this),
       pluginEvents.length === 0 && /* @__PURE__ */ jsx_dev_runtime8.jsxDEV(Text, {
         dimColor: true,
-        children: "플러그인 이벤트 없음"
+        children: t("noPluginEvents")
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
@@ -46662,7 +46727,7 @@ function ContextPanel({ events, scrollOffset, visibleHeight }) {
   if (tokenEvents.length === 0) {
     return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
       dimColor: true,
-      children: "토큰 데이터 없음. assistant 메시지 대기 중..."
+      children: t("noTokenData")
     }, undefined, false, undefined, this);
   }
   const latest = tokenEvents[tokenEvents.length - 1];
@@ -46693,7 +46758,7 @@ function ContextPanel({ events, scrollOffset, visibleHeight }) {
             children: [
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 bold: true,
-                children: "모델:"
+                children: t("model")
               }, undefined, false, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 color: "cyan",
@@ -46701,7 +46766,7 @@ function ContextPanel({ events, scrollOffset, visibleHeight }) {
               }, undefined, false, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 bold: true,
-                children: "한도:"
+                children: t("limit")
               }, undefined, false, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 children: [
@@ -46745,28 +46810,32 @@ function ContextPanel({ events, scrollOffset, visibleHeight }) {
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 color: "gray",
                 children: [
-                  "■ 시스템프롬프트: ",
+                  t("systemPrompt"),
+                  " ",
                   latestDetail.fixedTokens.toLocaleString()
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 color: "green",
                 children: [
-                  "■ 비고정: ",
+                  t("nonFixed"),
+                  " ",
                   latestDetail.nonFixedTokens.toLocaleString()
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 color: "yellow",
                 children: [
-                  "캐시 생성: ",
+                  t("cacheCreation"),
+                  " ",
                   latestDetail.cacheCreationTokens.toLocaleString()
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
                 color: "cyan",
                 children: [
-                  "출력: ",
+                  t("output"),
+                  " ",
                   latestDetail.outputTokens.toLocaleString()
                 ]
               }, undefined, true, undefined, this)
@@ -46776,12 +46845,8 @@ function ContextPanel({ events, scrollOffset, visibleHeight }) {
       }, undefined, true, undefined, this),
       /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
         bold: true,
-        children: [
-          "턴별 컨텍스트 사용 (",
-          tokenEvents.length,
-          " turns)"
-        ]
-      }, undefined, true, undefined, this),
+        children: t("perTurnContext")(tokenEvents.length)
+      }, undefined, false, undefined, this),
       turns.map((e, i) => {
         const d = e.detail;
         const ratio = d.totalInputTokens / limit;
@@ -46824,16 +46889,8 @@ function ContextPanel({ events, scrollOffset, visibleHeight }) {
       }),
       tokenEvents.length > visibleTurns && /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(Text, {
         dimColor: true,
-        children: [
-          "↑↓ 스크롤 (",
-          scrollOffset + 1,
-          "-",
-          Math.min(scrollOffset + visibleTurns, tokenEvents.length),
-          "/",
-          tokenEvents.length,
-          ")"
-        ]
-      }, undefined, true, undefined, this)
+        children: t("scrollHint")(scrollOffset + 1, Math.min(scrollOffset + visibleTurns, tokenEvents.length), tokenEvents.length)
+      }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
 }
@@ -47005,7 +47062,7 @@ function App2({ sessionPath }) {
               }, event.id, true, undefined, this)),
               filtered.length === 0 && /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Text, {
                 dimColor: true,
-                children: "이벤트 없음..."
+                children: t("noEvents")
               }, undefined, false, undefined, this)
             ]
           }, undefined, true, undefined, this)
@@ -47016,7 +47073,7 @@ function App2({ sessionPath }) {
         paddingX: 1,
         children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV(Text, {
           dimColor: true,
-          children: "1-8: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료"
+          children: t("footerHint")
         }, undefined, false, undefined, this)
       }, undefined, false, undefined, this)
     ]
@@ -47071,11 +47128,20 @@ function listProjectSessions(cwd2) {
     return [];
   return readdirSync(projectDir).filter((f) => f.endsWith(".jsonl")).map((f) => join(projectDir, f)).sort().reverse();
 }
+// package.json
+var version = "0.1.2";
 
 // src/cli.tsx
 var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
 var args = process.argv.slice(2);
-var targetPath = args[0];
+if (args[0] === "--version" || args[0] === "-v") {
+  console.log(version);
+  process.exit(0);
+}
+if (args.includes("--ko"))
+  setLocale("ko");
+var filteredArgs = args.filter((a) => a !== "--ko" && a !== "--en");
+var targetPath = filteredArgs[0];
 var sessionPath = targetPath ?? null;
 if (!sessionPath) {
   sessionPath = findCurrentSession();
@@ -47084,12 +47150,12 @@ if (!sessionPath) {
   const sessions = listProjectSessions();
   if (sessions.length > 0) {
     sessionPath = sessions[0];
-    console.error(`세션 감지 실패. 최근 세션 사용: ${sessionPath}`);
+    console.error(t("sessionFallback")(sessionPath));
   }
 }
 if (!sessionPath) {
-  console.error("❌ Claude 세션을 찾을 수 없습니다.");
-  console.error("사용법: cle [session.jsonl 경로]");
+  console.error(t("sessionNotFound"));
+  console.error(t("usage"));
   process.exit(1);
 }
 render_default(/* @__PURE__ */ jsx_dev_runtime11.jsxDEV(App2, {
