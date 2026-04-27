@@ -1,0 +1,11 @@
+src/
+tests/
+docs/
+.claude/
+.cursor/
+.harness/
+.gitignore
+tsconfig.json
+vitest.config.ts
+bun.lock
+*.sh

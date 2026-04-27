@@ -1,14 +1,36 @@
 {
-  "name": "claude-log-ex",
+  "name": "clogex",
   "version": "0.1.0",
+  "description": "TUI for exploring Claude Code session logs",
   "bin": {
-    "clx": "./dist/cli.js"
+    "clogex": "./dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "bun src/cli.tsx",
     "build": "bun build src/cli.tsx --compile --outfile clogex && cp clogex ~/.local/bin/clogex && rm clogex",
+    "build:npm": "bun build src/cli.tsx --outdir dist --target node && printf '#!/usr/bin/env node\\n' | cat - dist/cli.js > dist/cli.tmp && mv dist/cli.tmp dist/cli.js && chmod +x dist/cli.js",
+    "prepublishOnly": "bun run build:npm",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bd-makers/claude-log-ex.git"
+  },
+  "homepage": "https://github.com/bd-makers/claude-log-ex#readme",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "tui",
+    "cli",
+    "logs"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "chokidar": "^3.6.0",
