@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
+import { t } from "../../i18n";
 
 const CONTEXT_LIMITS: Record<string, number> = {
   "claude-opus-4": 200000,
@@ -59,7 +60,7 @@ type Props = {
 export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
   const tokenEvents = events.filter((e) => e.category === "token");
   if (tokenEvents.length === 0) {
-    return <Text dimColor>토큰 데이터 없음. assistant 메시지 대기 중...</Text>;
+    return <Text dimColor>{t("noTokenData")}</Text>;
   }
 
   const latest = tokenEvents[tokenEvents.length - 1];
@@ -91,9 +92,9 @@ export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
       </Text>
       <Box flexDirection="column" borderStyle="single" paddingX={1} gap={0}>
         <Box gap={2}>
-          <Text bold>모델:</Text>
+          <Text bold>{t("model")}</Text>
           <Text color="cyan">{model ?? "unknown"}</Text>
-          <Text bold>한도:</Text>
+          <Text bold>{t("limit")}</Text>
           <Text>{limit.toLocaleString()} tokens</Text>
         </Box>
         <Box gap={1}>
@@ -111,21 +112,22 @@ export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
         </Box>
         <Box gap={2}>
           <Text color="gray">
-            ■ 시스템프롬프트: {latestDetail.fixedTokens.toLocaleString()}
+            {t("systemPrompt")} {latestDetail.fixedTokens.toLocaleString()}
           </Text>
           <Text color="green">
-            ■ 비고정: {latestDetail.nonFixedTokens.toLocaleString()}
+            {t("nonFixed")} {latestDetail.nonFixedTokens.toLocaleString()}
           </Text>
           <Text color="yellow">
-            캐시 생성: {latestDetail.cacheCreationTokens.toLocaleString()}
+            {t("cacheCreation")}{" "}
+            {latestDetail.cacheCreationTokens.toLocaleString()}
           </Text>
           <Text color="cyan">
-            출력: {latestDetail.outputTokens.toLocaleString()}
+            {t("output")} {latestDetail.outputTokens.toLocaleString()}
           </Text>
         </Box>
       </Box>
 
-      <Text bold>턴별 컨텍스트 사용 ({tokenEvents.length} turns)</Text>
+      <Text bold>{t("perTurnContext")(tokenEvents.length)}</Text>
       {turns.map((e, i) => {
         const d = e.detail as {
           totalInputTokens: number;
@@ -155,9 +157,11 @@ export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
       })}
       {tokenEvents.length > visibleTurns && (
         <Text dimColor>
-          ↑↓ 스크롤 ({scrollOffset + 1}-
-          {Math.min(scrollOffset + visibleTurns, tokenEvents.length)}/
-          {tokenEvents.length})
+          {t("scrollHint")(
+            scrollOffset + 1,
+            Math.min(scrollOffset + visibleTurns, tokenEvents.length),
+            tokenEvents.length,
+          )}
         </Text>
       )}
     </Box>

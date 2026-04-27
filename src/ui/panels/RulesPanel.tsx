@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
+import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
@@ -17,12 +18,14 @@ export function RulesPanel({ events, scrollOffset, visibleHeight }: Props) {
       <Text bold underline>
         Rules / Context ({ruleEvents.length})
         {ruleEvents.length > maxVisible
-          ? ` [↑↓ 스크롤: ${scrollOffset + 1}-${Math.min(scrollOffset + maxVisible, ruleEvents.length)}/${ruleEvents.length}]`
+          ? t("scrollHintInline")(
+              scrollOffset + 1,
+              Math.min(scrollOffset + maxVisible, ruleEvents.length),
+              ruleEvents.length,
+            )
           : ""}
       </Text>
-      {ruleEvents.length === 0 && (
-        <Text dimColor>hook_additional_context 이벤트 없음</Text>
-      )}
+      {ruleEvents.length === 0 && <Text dimColor>{t("noContextEvents")}</Text>}
       {visible.map((e) => {
         const d = e.detail as { source: string; content: string };
         return (

@@ -1,5 +1,6 @@
 // src/core/event-classifier.ts
 import type { RawJsonlLine, RawContent, LogEvent } from "../events/types";
+import { t } from "../i18n";
 
 export function classifyEvent(
   raw: Partial<RawJsonlLine>,
@@ -169,7 +170,11 @@ export function classifyUsage(
     id,
     timestamp,
     category: "token",
-    summary: `고정 ${cacheRead.toLocaleString()} / 비고정 ${(inputTokens + cacheCreate).toLocaleString()} / 출력 ${outputTokens.toLocaleString()}`,
+    summary: t("tokenSummary")(
+      cacheRead.toLocaleString(),
+      (inputTokens + cacheCreate).toLocaleString(),
+      outputTokens.toLocaleString(),
+    ),
     detail: {
       fixedTokens: cacheRead,
       nonFixedTokens: inputTokens + cacheCreate,

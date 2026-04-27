@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
+import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
@@ -15,7 +16,7 @@ function bar(ratio: number, width = 20): string {
 export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
   const tokenEvents = events.filter((e) => e.category === "token");
   if (tokenEvents.length === 0) {
-    return <Text dimColor>토큰 데이터 없음. assistant 메시지 대기 중...</Text>;
+    return <Text dimColor>{t("noTokenData")}</Text>;
   }
 
   const totals = tokenEvents.reduce(
@@ -43,20 +44,26 @@ export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
         Token Usage ({tokenEvents.length} turns)
       </Text>
       <Box flexDirection="column" borderStyle="single" paddingX={1}>
-        <Text bold>누적 합계</Text>
+        <Text bold>{t("cumulative")}</Text>
         <Box gap={2}>
-          <Text color="green">캐시: {totals.fixed.toLocaleString()}</Text>
-          <Text color="yellow">논캐시: {totals.nonFixed.toLocaleString()}</Text>
-          <Text color="cyan">응답토큰: {totals.output.toLocaleString()}</Text>
+          <Text color="green">
+            {t("cached")} {totals.fixed.toLocaleString()}
+          </Text>
+          <Text color="yellow">
+            {t("nonCached")} {totals.nonFixed.toLocaleString()}
+          </Text>
+          <Text color="cyan">
+            {t("outputTokens")} {totals.output.toLocaleString()}
+          </Text>
         </Box>
         <Box gap={1}>
-          <Text dimColor>캐시 히트율</Text>
+          <Text dimColor>{t("cacheHitRate")}</Text>
           <Text color="red">{bar(fixedRatio)}</Text>
           <Text dimColor>{Math.round(fixedRatio * 100)}%</Text>
-          <Text dimColor>(캐시 재사용/전체 입력)</Text>
+          <Text dimColor>{t("cacheHitRateNote")}</Text>
         </Box>
       </Box>
-      <Text bold>턴별 내역</Text>
+      <Text bold>{t("perTurn")}</Text>
       {tokenEvents
         .slice(scrollOffset, scrollOffset + Math.max(5, visibleHeight - 8))
         .map((e) => {
@@ -73,12 +80,19 @@ export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
               <Text color="gray">
                 {e.timestamp.toISOString().slice(11, 19)}
               </Text>
-              <Text color="green">캐시:{d.fixedTokens.toLocaleString()}</Text>
-              <Text color="yellow">
-                논캐시:{d.nonFixedTokens.toLocaleString()}
+              <Text color="green">
+                {t("cached")}
+                {d.fixedTokens.toLocaleString()}
               </Text>
-              <Text color="cyan">응답:{d.outputTokens.toLocaleString()}</Text>
-              <Text dimColor>캐시 히트율</Text>
+              <Text color="yellow">
+                {t("nonCached")}
+                {d.nonFixedTokens.toLocaleString()}
+              </Text>
+              <Text color="cyan">
+                {t("outputTokens")}
+                {d.outputTokens.toLocaleString()}
+              </Text>
+              <Text dimColor>{t("cacheHitRate")}</Text>
               <Text color="red">
                 {bar(ratio, 12)} {Math.round(ratio * 100)}%
               </Text>

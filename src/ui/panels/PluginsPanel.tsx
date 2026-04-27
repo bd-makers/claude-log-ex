@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
+import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
@@ -29,7 +30,7 @@ export function PluginsPanel({
       {mcpEvents.length > 0 && (
         <Box flexDirection="column">
           <Text bold color="magenta">
-            MCP 서버 ({mcpEvents.length})
+            {t("mcpServers")(mcpEvents.length)}
           </Text>
           {mcpEvents.map((e) => {
             const d = e.detail as { names: string[]; action: string };
@@ -61,11 +62,11 @@ export function PluginsPanel({
                   <Text color="gray">
                     {e.timestamp.toISOString().slice(11, 19)}
                   </Text>
-                  <Text color="cyan">+{d.names.length}개</Text>
+                  <Text color="cyan">{t("pluginCount")(d.names.length)}</Text>
                 </Box>
                 <Text dimColor>
                   {d.names.slice(0, 5).join(", ")}
-                  {d.names.length > 5 ? ` 외 ${d.names.length - 5}개` : ""}
+                  {d.names.length > 5 ? t("moreItems")(d.names.length - 5) : ""}
                 </Text>
               </Box>
             );
@@ -73,7 +74,7 @@ export function PluginsPanel({
         </Box>
       )}
 
-      {pluginEvents.length === 0 && <Text dimColor>플러그인 이벤트 없음</Text>}
+      {pluginEvents.length === 0 && <Text dimColor>{t("noPluginEvents")}</Text>}
     </Box>
   );
 }

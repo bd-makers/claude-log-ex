@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import type { LogEvent } from "../../events/types";
+import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
@@ -46,7 +47,7 @@ export function AgentsPanel({ events, scrollOffset, visibleHeight }: Props) {
           </Box>
         );
       })}
-      {agentEvents.length === 0 && <Text dimColor>에이전트 호출 없음</Text>}
+      {agentEvents.length === 0 && <Text dimColor>{t("noAgents")}</Text>}
     </Box>
   );
 }

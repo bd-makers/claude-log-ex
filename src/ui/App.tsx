@@ -13,6 +13,7 @@ import { TokensPanel } from "./panels/TokensPanel";
 import { RulesPanel } from "./panels/RulesPanel";
 import { PluginsPanel } from "./panels/PluginsPanel";
 import { ContextPanel } from "./panels/ContextPanel";
+import { t } from "../i18n";
 
 type Tab =
   | "timeline"
@@ -206,12 +207,12 @@ export function App({ sessionPath }: Props) {
                   <Text>{event.summary}</Text>
                 </Box>
               ))}
-            {filtered.length === 0 && <Text dimColor>이벤트 없음...</Text>}
+            {filtered.length === 0 && <Text dimColor>{t("noEvents")}</Text>}
           </>
         )}
       </Box>
       <Box borderStyle="single" paddingX={1}>
-        <Text dimColor>1-8: 탭 전환 | ←→: 이동 | ↑↓: 스크롤 | q: 종료</Text>
+        <Text dimColor>{t("footerHint")}</Text>
       </Box>
     </Box>
   );
