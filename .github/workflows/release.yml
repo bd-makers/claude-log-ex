@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build-arm64:
     name: Build (macOS arm64)
@@ -45,11 +48,15 @@ jobs:
           path: clogex-macos-x86_64
 
   release:
-    name: Create GitHub Release & Update Formula
+    name: Create Release & Update Formula
     needs: [build-arm64, build-x86_64]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/download-artifact@v4
         with:
           name: binary-arm64
@@ -74,26 +81,40 @@ jobs:
             --title "clogex ${{ github.ref_name }}" \
             --generate-notes
 
-      - name: Update Homebrew Formula
-        env:
-          HOMEBREW_TAP_PAT: ${{ secrets.HOMEBREW_TAP_PAT }}
+      - name: Update Formula
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
           ARM64_SHA="${{ needs.build-arm64.outputs.arm64_sha256 }}"
           X86_64_SHA="${{ needs.build-x86_64.outputs.x86_64_sha256 }}"
 
-          git clone "https://x-access-token:${HOMEBREW_TAP_PAT}@github.com/bd-makers/homebrew-clogex.git" tap
-          cd tap
+          python3 - <<EOF
+          import re
 
-          sed -i \
-            -e "s/version \".*\"/version \"${VERSION}\"/" \
-            -e "/on_arm/,/end/{s/sha256 \".*\"/sha256 \"${ARM64_SHA}\"/}" \
-            -e "/on_intel/,/end/{s/sha256 \".*\"/sha256 \"${X86_64_SHA}\"/}" \
-            Formula/clogex.rb
+          with open("Formula/clogex.rb") as f:
+              content = f.read()
+
+          content = re.sub(r'version ".*"', f'version "{VERSION}"', content)
+
+          # Replace sha256 inside on_arm block
+          content = re.sub(
+              r'(on_arm do.*?sha256 ")[^"]*(")',
+              rf'\g<1>{ARM64_SHA}\g<2>',
+              content, flags=re.DOTALL
+          )
+          # Replace sha256 inside on_intel block
+          content = re.sub(
+              r'(on_intel do.*?sha256 ")[^"]*(")',
+              rf'\g<1>{X86_64_SHA}\g<2>',
+              content, flags=re.DOTALL
+          )
+
+          with open("Formula/clogex.rb", "w") as f:
+              f.write(content)
+          EOF
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/clogex.rb
-          git commit -m "chore: bump clogex to ${VERSION}"
+          git commit -m "chore: bump formula to ${VERSION}"
           git push
