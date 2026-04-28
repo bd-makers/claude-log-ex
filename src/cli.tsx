@@ -1,8 +1,4 @@
-import { render } from "ink";
-import { App } from "./ui/App";
-import { findCurrentSession, listProjectSessions } from "./core/session-finder";
 import { version } from "../package.json";
-import { setLocale, t } from "./i18n";
 
 const args = process.argv.slice(2);
 
@@ -10,6 +6,12 @@ if (args[0] === "--version" || args[0] === "-v") {
   console.log(version);
   process.exit(0);
 }
+
+const { render } = await import("ink");
+const { App } = await import("./ui/App");
+const { findCurrentSession, listProjectSessions } =
+  await import("./core/session-finder");
+const { setLocale, t } = await import("./i18n");
 
 if (args.includes("--ko")) setLocale("ko");
 
