@@ -25,17 +25,19 @@ export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
         fixedTokens: number;
         nonFixedTokens: number;
         outputTokens: number;
+        cacheCreationTokens: number;
       };
       return {
         fixed: acc.fixed + d.fixedTokens,
         nonFixed: acc.nonFixed + d.nonFixedTokens,
         output: acc.output + d.outputTokens,
+        cacheCreation: acc.cacheCreation + (d.cacheCreationTokens ?? 0),
       };
     },
-    { fixed: 0, nonFixed: 0, output: 0 },
+    { fixed: 0, nonFixed: 0, output: 0, cacheCreation: 0 },
   );
 
-  const totalInput = totals.fixed + totals.nonFixed;
+  const totalInput = totals.fixed + totals.nonFixed + totals.cacheCreation;
   const fixedRatio = totalInput > 0 ? totals.fixed / totalInput : 0;
 
   return (
