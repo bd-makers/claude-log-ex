@@ -180,7 +180,7 @@ export function classifyUsage(
       nonFixedTokens: inputTokens,
       outputTokens,
       cacheCreationTokens: cacheCreate,
-      totalInputTokens: cacheRead + inputTokens,
+      totalInputTokens: cacheRead + inputTokens + cacheCreate,
       model: raw.message?.model,
     },
   };
