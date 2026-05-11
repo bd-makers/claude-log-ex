@@ -90,7 +90,7 @@ export function classifyEvent(
     }
   }
 
-  if (raw.type === "human" && raw.message?.content) {
+  if ((raw.type === "human" || raw.type === "user") && raw.message?.content) {
     const content = raw.message.content;
     let text = "";
     if (typeof content === "string") {
