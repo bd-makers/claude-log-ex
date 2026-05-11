@@ -1,7 +1,7 @@
 class Clogex < Formula
   desc "TUI for exploring Claude Code session logs"
   homepage "https://github.com/bd-makers/claude-log-ex"
-  version "0.1.5"
+  version "0.1.6"
   license "MIT"
 
   on_macos do
