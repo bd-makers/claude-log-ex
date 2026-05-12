@@ -9,7 +9,7 @@ type SessionInfo = {
 };
 
 export function encodeProjectPath(cwd: string): string {
-  return cwd.replace(/\//g, "-");
+  return cwd.replace(/[^a-zA-Z0-9]/g, "-");
 }
 
 function resolveMainWorktreePath(cwd: string): string | null {

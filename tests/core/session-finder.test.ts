@@ -14,6 +14,12 @@ describe("encodeProjectPath", () => {
   it("encodes root path", () => {
     expect(encodeProjectPath("/foo")).toBe("-foo");
   });
+
+  it("encodes underscores in username", () => {
+    expect(encodeProjectPath("/Users/logan_d/Project/bodoc4")).toBe(
+      "-Users-logan-d-Project-bodoc4",
+    );
+  });
 });
 
 describe("buildJsonlPath", () => {
