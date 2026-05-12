@@ -54,4 +54,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Formula/clogex.rb
           git commit -m "chore: bump formula to ${VERSION}"
-          git push
+          git push origin HEAD:main
