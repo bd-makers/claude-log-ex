@@ -7,6 +7,36 @@ if (args[0] === "--version" || args[0] === "-v") {
   process.exit(0);
 }
 
+if (args[0] === "--help" || args[0] === "-h") {
+  process.stdout.write(
+    [
+      `clogex v${version} — Claude Code session log viewer`,
+      "",
+      "Usage:",
+      "  clogex [options] [session.jsonl]",
+      "",
+      "Arguments:",
+      "  session.jsonl    Path to a Claude session log file.",
+      "                   Auto-detected from current project if omitted.",
+      "",
+      "Options:",
+      "  -h, --help       Show this help message",
+      "  -v, --version    Show version number",
+      "  --ko             Use Korean UI",
+      "  --en             Use English UI (default)",
+      "",
+      "Key bindings (inside the TUI):",
+      "  1-8              Switch tab",
+      "  ← →              Navigate turns",
+      "  ↑ ↓              Scroll",
+      "  s                Toggle sort order (newest / oldest)",
+      "  q                Quit",
+      "",
+    ].join("\n"),
+  );
+  process.exit(0);
+}
+
 async function main() {
   const { render } = await import("ink");
   const { App } = await import("./ui/App");
