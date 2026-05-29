@@ -42,7 +42,7 @@ if (args[0] === "--update") {
   const { detectInstallMethod, fetchLatestVersion, isUpToDate, performUpdate } =
     await import("./core/updater");
 
-  let latestVersion: string;
+  let latestVersion = "";
   try {
     latestVersion = await fetchLatestVersion();
   } catch {
@@ -50,7 +50,6 @@ if (args[0] === "--update") {
       `Error: Failed to fetch latest release.\n  → https://github.com/bd-makers/claude-log-ex/releases/latest\n`,
     );
     process.exit(1);
-    latestVersion = ""; // unreachable, but satisfies TypeScript
   }
 
   if (isUpToDate(version, latestVersion)) {
