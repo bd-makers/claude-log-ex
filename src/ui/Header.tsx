@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
 import { basename } from "path";
+import { version } from "../../package.json";
 
 type Props = {
   sessionPath: string;
@@ -11,7 +12,7 @@ export function Header({ sessionPath, eventCount, totalTokens }: Props) {
   const sessionId = basename(sessionPath, ".jsonl").slice(0, 8);
   const totalInput = totalTokens.fixed + totalTokens.nonFixed;
   return (
-    <Box borderStyle="round" paddingX={1} marginBottom={0} gap={2}>
+    <Box borderStyle="round" paddingX={1} marginBottom={0} gap={2} width="100%">
       <Text bold color="cyan">
         Claude Log Explorer
       </Text>
@@ -27,6 +28,9 @@ export function Header({ sessionPath, eventCount, totalTokens }: Props) {
           <Text color="yellow">{totalTokens.nonFixed.toLocaleString()}</Text>
         </>
       )}
+      <Box flexGrow={1} justifyContent="flex-end">
+        <Text dimColor>v{version}</Text>
+      </Box>
     </Box>
   );
 }
