@@ -45,7 +45,7 @@ export async function performUpdate(opts: {
     process.stdout.write("Updating via npm...\n");
     const result = spawnSync(
       "npm",
-      ["update", "-g", "@bdmakers/claude-log-ex"],
+      ["install", "-g", "@bdmakers/claude-log-ex@latest"],
       { stdio: "inherit" },
     );
     if (result.status == null || result.status !== 0)
