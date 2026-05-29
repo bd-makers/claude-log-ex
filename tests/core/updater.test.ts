@@ -1,8 +1,9 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import {
   detectInstallMethod,
   isUpToDate,
   fetchLatestVersion,
+  performUpdate,
 } from "../../src/core/updater";
 
 describe("detectInstallMethod", () => {
@@ -94,5 +95,101 @@ describe("fetchLatestVersion", () => {
     expect(mockFetch).toHaveBeenCalledWith(
       "https://api.github.com/repos/bd-makers/claude-log-ex/releases/latest",
     );
+  });
+});
+
+describe("performUpdate", () => {
+  // biome-ignore lint: spy type widened intentionally for test assertions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let stdoutSpy: any;
+
+  beforeEach(() => {
+    stdoutSpy = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  // homebrew / npm: vi.spyOn cannot redefine non-configurable native module
+  // properties in Bun, so we verify the observable side-effect: stdout message.
+  it("homebrew: writes Homebrew update message to stdout", async () => {
+    // spawnSync will actually run; brew may not exist — catch the error and
+    // only assert the stdout message which is emitted before the spawn call.
+    try {
+      await performUpdate({
+        latestVersion: "0.2.0",
+        method: "homebrew",
+        execPath: "/opt/homebrew/bin/clogex",
+      });
+    } catch {
+      // brew may fail in CI; that's acceptable for this assertion
+    }
+    expect(stdoutSpy).toHaveBeenCalledWith("Updating via Homebrew...\n");
+  });
+
+  it("npm: writes npm update message to stdout", async () => {
+    try {
+      await performUpdate({
+        latestVersion: "0.2.0",
+        method: "npm",
+        execPath: "/home/user/.npm/bin/clogex",
+      });
+    } catch {
+      // npm update may fail in CI; that's acceptable for this assertion
+    }
+    expect(stdoutSpy).toHaveBeenCalledWith("Updating via npm...\n");
+  });
+
+  it("direct: calls fetch with correct URL", async () => {
+    const fakeBody = new Uint8Array([1, 2, 3]);
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => fakeBody.buffer,
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    // fs operations (writeFileSync / chmodSync / renameSync) will actually run;
+    // use a tmp execPath that is safe to write to.
+    const execPath = `/tmp/clogex-test-target-${process.pid}`;
+    await performUpdate({ latestVersion: "0.2.0", method: "direct", execPath });
+    expect(mockFetch).toHaveBeenCalledWith(
+      "https://github.com/bd-makers/claude-log-ex/releases/download/v0.2.0/clogex-macos-arm64",
+    );
+  });
+
+  it("direct: writes stdout messages for binary replacement", async () => {
+    const fakeBody = new Uint8Array([1, 2, 3]);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => fakeBody.buffer,
+      }),
+    );
+    const execPath = `/tmp/clogex-test-target-${process.pid}`;
+    await performUpdate({ latestVersion: "0.2.0", method: "direct", execPath });
+    expect(stdoutSpy).toHaveBeenCalledWith(
+      "Updating via direct binary replacement...\n",
+    );
+    expect(stdoutSpy).toHaveBeenCalledWith(
+      "Downloading clogex-macos-arm64...\n",
+    );
+  });
+
+  it("direct: throws on failed download", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: false, status: 404 }),
+    );
+    await expect(
+      performUpdate({
+        latestVersion: "0.2.0",
+        method: "direct",
+        execPath: "/tmp/clogex-test-noop",
+      }),
+    ).rejects.toThrow("Failed to download binary");
   });
 });
