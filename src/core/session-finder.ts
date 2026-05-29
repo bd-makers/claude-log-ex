@@ -30,6 +30,24 @@ function resolveMainWorktreePath(cwd: string): string | null {
   }
 }
 
+function resolveMainWorktreePath(cwd: string): string | null {
+  const gitPath = join(cwd, ".git");
+  if (!existsSync(gitPath)) return null;
+  try {
+    if (statSync(gitPath).isDirectory()) return null;
+    // worktree: .git is a file with "gitdir: /main/.git/worktrees/name"
+    const content = readFileSync(gitPath, "utf-8").trim();
+    const match = content.match(/^gitdir:\s*(.+)$/);
+    if (!match) return null;
+    // /main/.git/worktrees/name → /main
+    const worktreesDir = match[1]; // e.g. /main/.git/worktrees/name
+    const dotGitDir = dirname(dirname(worktreesDir)); // /main/.git
+    return dirname(dotGitDir); // /main
+  } catch {
+    return null;
+  }
+}
+
 export function buildJsonlPath(
   claudeHome: string,
   cwd: string,
