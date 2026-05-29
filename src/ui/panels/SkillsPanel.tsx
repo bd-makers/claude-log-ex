@@ -1,14 +1,21 @@
 import { Box, Text } from "ink";
-import type { LogEvent } from "../../events/types";
+import type { LogEvent, SortDir } from "../../events/types";
+import { applySort } from "../../core/sort";
 import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
   scrollOffset: number;
   visibleHeight: number;
+  sortDir: SortDir;
 };
 
-export function SkillsPanel({ events, scrollOffset, visibleHeight }: Props) {
+export function SkillsPanel({
+  events,
+  scrollOffset,
+  visibleHeight,
+  sortDir,
+}: Props) {
   const skillEvents = events.filter((e) => e.category === "skill");
   const invocations = skillEvents.filter(
     (e) => (e.detail as { phase: string }).phase === "invoked",
@@ -16,7 +23,7 @@ export function SkillsPanel({ events, scrollOffset, visibleHeight }: Props) {
   const listings = skillEvents.filter(
     (e) => (e.detail as { phase: string }).phase === "listed",
   );
-  const visibleInvocations = invocations.slice(
+  const visibleInvocations = applySort(invocations, sortDir).slice(
     scrollOffset,
     scrollOffset + visibleHeight - 3,
   );

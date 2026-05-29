@@ -5,7 +5,8 @@ import { TabBar } from "./TabBar";
 import { classifyEvent, classifyUsage } from "../core/event-classifier";
 import { parseJsonlLine } from "../core/jsonl-parser";
 import { tailJsonlFile } from "../core/file-watcher";
-import type { LogEvent } from "../events/types";
+import { applySort } from "../core/sort";
+import type { LogEvent, SortDir } from "../events/types";
 import { SkillsPanel } from "./panels/SkillsPanel";
 import { HooksPanel } from "./panels/HooksPanel";
 import { AgentsPanel } from "./panels/AgentsPanel";
@@ -41,6 +42,7 @@ export function App({ sessionPath }: Props) {
   const [events, setEvents] = useState<LogEvent[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>("timeline");
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const { stdout } = useStdout();
   const terminalRows = stdout?.rows ?? 24;
 
@@ -83,6 +85,11 @@ export function App({ sessionPath }: Props) {
 
   useInput((input, key) => {
     if (input === "q") exit();
+    if (input === "s") {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+      setScrollOffset(0);
+      return;
+    }
     const idx = parseInt(input) - 1;
     if (idx >= 0 && idx < TABS.length) {
       setActiveTab(TABS[idx]);
@@ -147,6 +154,7 @@ export function App({ sessionPath }: Props) {
             events={events}
             scrollOffset={scrollOffset}
             visibleHeight={contentHeight}
+            sortDir={sortDir}
           />
         )}
         {activeTab === "hooks" && (
@@ -154,6 +162,7 @@ export function App({ sessionPath }: Props) {
             events={events}
             scrollOffset={scrollOffset}
             visibleHeight={contentHeight}
+            sortDir={sortDir}
           />
         )}
         {activeTab === "agents" && (
@@ -161,6 +170,7 @@ export function App({ sessionPath }: Props) {
             events={events}
             scrollOffset={scrollOffset}
             visibleHeight={contentHeight}
+            sortDir={sortDir}
           />
         )}
         {activeTab === "tokens" && (
@@ -168,6 +178,7 @@ export function App({ sessionPath }: Props) {
             events={events}
             scrollOffset={scrollOffset}
             visibleHeight={contentHeight}
+            sortDir={sortDir}
           />
         )}
         {activeTab === "rules" && (
@@ -175,6 +186,7 @@ export function App({ sessionPath }: Props) {
             events={events}
             scrollOffset={scrollOffset}
             visibleHeight={contentHeight}
+            sortDir={sortDir}
           />
         )}
         {activeTab === "plugins" && (
@@ -182,6 +194,7 @@ export function App({ sessionPath }: Props) {
             events={events}
             scrollOffset={scrollOffset}
             visibleHeight={contentHeight}
+            sortDir={sortDir}
           />
         )}
         {activeTab === "context" && (
@@ -189,13 +202,13 @@ export function App({ sessionPath }: Props) {
             events={events}
             scrollOffset={scrollOffset}
             visibleHeight={contentHeight}
+            sortDir={sortDir}
           />
         )}
         {activeTab === "timeline" && (
           <>
-            {filtered
-              .slice(-contentHeight)
-              .slice(scrollOffset > 0 ? scrollOffset : 0)
+            {applySort(filtered, sortDir)
+              .slice(scrollOffset, scrollOffset + contentHeight)
               .map((event) => (
                 <Box key={event.id} gap={1}>
                   <Text color="gray" dimColor>
@@ -211,8 +224,11 @@ export function App({ sessionPath }: Props) {
           </>
         )}
       </Box>
-      <Box borderStyle="single" paddingX={1}>
+      <Box borderStyle="single" paddingX={1} gap={1}>
         <Text dimColor>{t("footerHint")}</Text>
+        <Text color="cyan">
+          {sortDir === "desc" ? t("sortDesc") : t("sortAsc")}
+        </Text>
       </Box>
     </Box>
   );

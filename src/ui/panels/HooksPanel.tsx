@@ -1,15 +1,22 @@
 import { Box, Text } from "ink";
-import type { LogEvent } from "../../events/types";
+import type { LogEvent, SortDir } from "../../events/types";
+import { applySort } from "../../core/sort";
 
 type Props = {
   events: LogEvent[];
   scrollOffset: number;
   visibleHeight: number;
+  sortDir: SortDir;
 };
 
-export function HooksPanel({ events, scrollOffset, visibleHeight }: Props) {
+export function HooksPanel({
+  events,
+  scrollOffset,
+  visibleHeight,
+  sortDir,
+}: Props) {
   const hookEvents = events.filter((e) => e.category === "hook");
-  const visible = hookEvents.slice(
+  const visible = applySort(hookEvents, sortDir).slice(
     scrollOffset,
     scrollOffset + visibleHeight - 1,
   );

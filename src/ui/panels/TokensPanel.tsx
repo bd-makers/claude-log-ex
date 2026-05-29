@@ -1,11 +1,13 @@
 import { Box, Text } from "ink";
-import type { LogEvent } from "../../events/types";
+import type { LogEvent, SortDir } from "../../events/types";
+import { applySort } from "../../core/sort";
 import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
   scrollOffset: number;
   visibleHeight: number;
+  sortDir: SortDir;
 };
 
 function bar(ratio: number, width = 20): string {
@@ -13,7 +15,12 @@ function bar(ratio: number, width = 20): string {
   return "█".repeat(filled) + "░".repeat(width - filled);
 }
 
-export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
+export function TokensPanel({
+  events,
+  scrollOffset,
+  visibleHeight,
+  sortDir,
+}: Props) {
   const tokenEvents = events.filter((e) => e.category === "token");
   if (tokenEvents.length === 0) {
     return <Text dimColor>{t("noTokenData")}</Text>;
@@ -66,7 +73,7 @@ export function TokensPanel({ events, scrollOffset, visibleHeight }: Props) {
         </Box>
       </Box>
       <Text bold>{t("perTurn")}</Text>
-      {tokenEvents
+      {applySort(tokenEvents, sortDir)
         .slice(scrollOffset, scrollOffset + Math.max(5, visibleHeight - 8))
         .map((e) => {
           const d = e.detail as {

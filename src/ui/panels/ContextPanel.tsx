@@ -1,5 +1,6 @@
 import { Box, Text } from "ink";
-import type { LogEvent } from "../../events/types";
+import type { LogEvent, SortDir } from "../../events/types";
+import { applySort } from "../../core/sort";
 import { t } from "../../i18n";
 
 const CONTEXT_LIMITS: Record<string, number> = {
@@ -55,9 +56,15 @@ type Props = {
   events: LogEvent[];
   scrollOffset: number;
   visibleHeight: number;
+  sortDir: SortDir;
 };
 
-export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
+export function ContextPanel({
+  events,
+  scrollOffset,
+  visibleHeight,
+  sortDir,
+}: Props) {
   const tokenEvents = events.filter((e) => e.category === "token");
   if (tokenEvents.length === 0) {
     return <Text dimColor>{t("noTokenData")}</Text>;
@@ -83,7 +90,14 @@ export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
   const color = barColor(latestRatio);
 
   const visibleTurns = Math.max(5, visibleHeight - 10);
-  const turns = tokenEvents.slice(scrollOffset, scrollOffset + visibleTurns);
+  const numberedTurns = tokenEvents.map((event, i) => ({
+    event,
+    turnNum: i + 1,
+  }));
+  const turns = applySort(numberedTurns, sortDir).slice(
+    scrollOffset,
+    scrollOffset + visibleTurns,
+  );
 
   return (
     <Box flexDirection="column" gap={1}>
@@ -128,7 +142,7 @@ export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
       </Box>
 
       <Text bold>{t("perTurnContext")(tokenEvents.length)}</Text>
-      {turns.map((e, i) => {
+      {turns.map(({ event: e, turnNum }) => {
         const d = e.detail as {
           totalInputTokens: number;
           fixedTokens: number;
@@ -136,7 +150,6 @@ export function ContextPanel({ events, scrollOffset, visibleHeight }: Props) {
         };
         const ratio = d.totalInputTokens / limit;
         const c = barColor(ratio);
-        const turnNum = scrollOffset + i + 1;
         return (
           <Box key={e.id} gap={1}>
             <Text color="gray" dimColor>

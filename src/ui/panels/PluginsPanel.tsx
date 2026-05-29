@@ -1,24 +1,33 @@
 import { Box, Text } from "ink";
-import type { LogEvent } from "../../events/types";
+import type { LogEvent, SortDir } from "../../events/types";
+import { applySort } from "../../core/sort";
 import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
   scrollOffset: number;
   visibleHeight: number;
+  sortDir: SortDir;
 };
 
 export function PluginsPanel({
   events,
   scrollOffset: _scrollOffset,
   visibleHeight: _visibleHeight,
+  sortDir,
 }: Props) {
   const pluginEvents = events.filter((e) => e.category === "plugin");
-  const mcpEvents = pluginEvents.filter(
-    (e) => (e.detail as { pluginType: string }).pluginType === "mcp",
+  const mcpEvents = applySort(
+    pluginEvents.filter(
+      (e) => (e.detail as { pluginType: string }).pluginType === "mcp",
+    ),
+    sortDir,
   );
-  const toolEvents = pluginEvents.filter(
-    (e) => (e.detail as { pluginType: string }).pluginType === "tool",
+  const toolEvents = applySort(
+    pluginEvents.filter(
+      (e) => (e.detail as { pluginType: string }).pluginType === "tool",
+    ),
+    sortDir,
   );
 
   return (

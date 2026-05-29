@@ -1,3 +1,5 @@
+export type SortDir = "asc" | "desc";
+
 export type EventCategory =
   | "skill"
   | "hook"

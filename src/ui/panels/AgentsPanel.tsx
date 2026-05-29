@@ -1,17 +1,24 @@
 import { Box, Text } from "ink";
-import type { LogEvent } from "../../events/types";
+import type { LogEvent, SortDir } from "../../events/types";
+import { applySort } from "../../core/sort";
 import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
   scrollOffset: number;
   visibleHeight: number;
+  sortDir: SortDir;
 };
 
-export function AgentsPanel({ events, scrollOffset, visibleHeight }: Props) {
+export function AgentsPanel({
+  events,
+  scrollOffset,
+  visibleHeight,
+  sortDir,
+}: Props) {
   const agentEvents = events.filter((e) => e.category === "agent");
   const itemHeight = 2;
-  const visible = agentEvents.slice(
+  const visible = applySort(agentEvents, sortDir).slice(
     scrollOffset,
     scrollOffset + Math.floor(visibleHeight / itemHeight),
   );

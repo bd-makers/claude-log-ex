@@ -1,18 +1,28 @@
 import { Box, Text } from "ink";
-import type { LogEvent } from "../../events/types";
+import type { LogEvent, SortDir } from "../../events/types";
+import { applySort } from "../../core/sort";
 import { t } from "../../i18n";
 
 type Props = {
   events: LogEvent[];
   scrollOffset: number;
   visibleHeight: number;
+  sortDir: SortDir;
 };
 
-export function RulesPanel({ events, scrollOffset, visibleHeight }: Props) {
+export function RulesPanel({
+  events,
+  scrollOffset,
+  visibleHeight,
+  sortDir,
+}: Props) {
   const ruleEvents = events.filter((e) => e.category === "rule");
   const itemHeight = 3;
   const maxVisible = Math.floor(visibleHeight / itemHeight);
-  const visible = ruleEvents.slice(scrollOffset, scrollOffset + maxVisible);
+  const visible = applySort(ruleEvents, sortDir).slice(
+    scrollOffset,
+    scrollOffset + maxVisible,
+  );
   return (
     <Box flexDirection="column" gap={1} width="100%">
       <Text bold underline>
