@@ -39,7 +39,8 @@ export async function performUpdate(opts: {
     const result = spawnSync("brew", ["upgrade", "clogex"], {
       stdio: "inherit",
     });
-    if (result.status !== 0) throw new Error("brew upgrade failed.");
+    if (result.status == null || result.status !== 0)
+      throw new Error("brew upgrade failed.");
   } else if (method === "npm") {
     process.stdout.write("Updating via npm...\n");
     const result = spawnSync(
@@ -47,7 +48,8 @@ export async function performUpdate(opts: {
       ["update", "-g", "@bdmakers/claude-log-ex"],
       { stdio: "inherit" },
     );
-    if (result.status !== 0) throw new Error("npm update failed.");
+    if (result.status == null || result.status !== 0)
+      throw new Error("npm update failed.");
   } else {
     process.stdout.write("Updating via direct binary replacement...\n");
     process.stdout.write("Downloading clogex-macos-arm64...\n");

@@ -24,6 +24,7 @@ if (args[0] === "--help" || args[0] === "-h") {
       "  -v, --version    Show version number",
       "  --ko             Use Korean UI",
       "  --en             Use English UI (default)",
+      "  --update         Self-update to the latest release",
       "",
       "Key bindings (inside the TUI):",
       "  1-8              Switch tab",
@@ -35,6 +36,49 @@ if (args[0] === "--help" || args[0] === "-h") {
     ].join("\n"),
   );
   process.exit(0);
+}
+
+if (args[0] === "--update") {
+  const { detectInstallMethod, fetchLatestVersion, isUpToDate, performUpdate } =
+    await import("./core/updater");
+
+  let latestVersion: string;
+  try {
+    latestVersion = await fetchLatestVersion();
+  } catch {
+    process.stderr.write(
+      `Error: Failed to fetch latest release.\n  → https://github.com/bd-makers/claude-log-ex/releases/latest\n`,
+    );
+    process.exit(1);
+    latestVersion = ""; // unreachable, but satisfies TypeScript
+  }
+
+  if (isUpToDate(version, latestVersion)) {
+    process.stdout.write(`clogex v${version} is already up to date.\n`);
+    process.exit(0);
+  }
+
+  process.stdout.write(
+    `Checking for updates... v${version} → v${latestVersion}\n`,
+  );
+
+  const method = detectInstallMethod(process.execPath, process.argv[1] ?? "");
+
+  try {
+    await performUpdate({ latestVersion, method, execPath: process.execPath });
+    process.stdout.write(`Updated to v${latestVersion}.\n`);
+    process.exit(0);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("EACCES") || msg.includes("Permission denied")) {
+      process.stderr.write(
+        `Error: Permission denied. Try: sudo clogex --update\n`,
+      );
+    } else {
+      process.stderr.write(`Error: ${msg}\n`);
+    }
+    process.exit(1);
+  }
 }
 
 async function main() {
