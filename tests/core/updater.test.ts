@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
-import { detectInstallMethod } from "../../src/core/updater";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import {
+  detectInstallMethod,
+  isUpToDate,
+  fetchLatestVersion,
+} from "../../src/core/updater";
 
 describe("detectInstallMethod", () => {
   it("detects homebrew from execPath", () => {
@@ -37,5 +41,58 @@ describe("detectInstallMethod", () => {
 
   it("returns direct for /usr/local/bin without npm markers", () => {
     expect(detectInstallMethod("/usr/local/bin/clogex", "")).toBe("direct");
+  });
+});
+
+describe("isUpToDate", () => {
+  it("returns true when versions match", () => {
+    expect(isUpToDate("0.1.9", "0.1.9")).toBe(true);
+  });
+
+  it("returns false when latest is newer", () => {
+    expect(isUpToDate("0.1.9", "0.2.0")).toBe(false);
+  });
+});
+
+describe("fetchLatestVersion", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("returns version string without v prefix", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ tag_name: "v0.2.0" }),
+      }),
+    );
+    const version = await fetchLatestVersion();
+    expect(version).toBe("0.2.0");
+  });
+
+  it("throws when response is not ok", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      }),
+    );
+    await expect(fetchLatestVersion()).rejects.toThrow(
+      "Failed to fetch latest release.",
+    );
+  });
+
+  it("calls the correct GitHub API URL", async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ tag_name: "v0.2.0" }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    await fetchLatestVersion();
+    expect(mockFetch).toHaveBeenCalledWith(
+      "https://api.github.com/repos/bd-makers/claude-log-ex/releases/latest",
+    );
   });
 });
