@@ -48,6 +48,9 @@ clogex --ko
 
 # English UI (default)
 clogex --en
+
+# self-update
+clogex --update
 ```
 
 ## Screenshots
